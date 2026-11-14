@@ -20,7 +20,7 @@
 }
 
 :root {
-  --background: oklch(0.99 0 0);
+  --background: oklch(0.98 0.005 265);
   --foreground: oklch(0.2 0.02 260);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.2 0.02 260);
@@ -51,5 +51,15 @@
 
   #root {
     min-height: 100svh;
+  }
+
+  button:not(:disabled), a, input[type="checkbox"] {
+    cursor: pointer;
+  }
+
+  a:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 4px;
+    border-radius: 4px;
   }
 }

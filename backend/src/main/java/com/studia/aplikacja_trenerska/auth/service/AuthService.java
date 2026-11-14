@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.studia.aplikacja_trenerska.auth.dto.AuthResponse;
 import com.studia.aplikacja_trenerska.auth.dto.LoginRequest;
 import com.studia.aplikacja_trenerska.auth.dto.RegisterRequest;
+import com.studia.aplikacja_trenerska.auth.dto.MessageResponse;
 import com.studia.aplikacja_trenerska.user.entity.User;
 import com.studia.aplikacja_trenerska.user.entity.UserRole;
 import com.studia.aplikacja_trenerska.user.mapper.UserMapper;
@@ -24,24 +25,28 @@ public class AuthService {
 	private final AuthenticationManager authenticationManager;
 	private final JwtService jwtService;
 	private final UserMapper userMapper;
+	private final AccountService accountService;
 
 	public AuthService(
 			UserRepository userRepository,
 			PasswordEncoder passwordEncoder,
 			AuthenticationManager authenticationManager,
 			JwtService jwtService,
-			UserMapper userMapper
+			UserMapper userMapper,
+			AccountService accountService
 	) {
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.authenticationManager = authenticationManager;
 		this.jwtService = jwtService;
 		this.userMapper = userMapper;
+		this.accountService = accountService;
 	}
 
 	@Transactional
-	public AuthResponse register(RegisterRequest request) {
-		String email = request.email().trim().toLowerCase();
+	public MessageResponse register(RegisterRequest request) {
+		AccountService.validatePasswordBytes(request.password());
+		String email = AccountService.normalizeEmail(request.email());
 		if (userRepository.existsByEmailIgnoreCase(email)) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, "Konto z tym adresem e-mail już istnieje");
 		}
@@ -51,19 +56,21 @@ public class AuthService {
 		user.setPasswordHash(passwordEncoder.encode(request.password()));
 		user.setDisplayName(request.displayName().trim());
 		user.setRole(UserRole.USER);
-		user.setEnabled(true);
+		user.setEnabled(false);
 
 		User saved = userRepository.save(user);
-		return buildAuthResponse(saved);
+		accountService.sendConfirmation(saved);
+		return new MessageResponse("Konto utworzone. Sprawdź e-mail i potwierdź rejestrację, aby się zalogować.");
 	}
 
+	@Transactional
 	public AuthResponse login(LoginRequest request) {
-		String email = request.email().trim().toLowerCase();
+		AccountService.validatePasswordBytes(request.password());
+		String email = AccountService.normalizeEmail(request.email());
+		User user = userRepository.findForUpdateByEmail(email)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Nieprawidłowe dane logowania"));
 		authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(email, request.password()));
-
-		User user = userRepository.findByEmailIgnoreCase(email)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Nieprawidłowe dane logowania"));
 
 		return buildAuthResponse(user);
 	}

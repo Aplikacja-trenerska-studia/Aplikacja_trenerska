@@ -16,5 +16,8 @@ export type AuthResponse = {
 
 export type ApiError = {
   message: string
+  status?: number
   errors?: Record<string, string>
 }
+
+export type MessageResponse = { message: string }

@@ -38,6 +38,17 @@ public class User {
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt = Instant.now();
 
+	@Column(name = "token_version", nullable = false)
+	private long tokenVersion;
+
+	public long getTokenVersion() {
+		return tokenVersion;
+	}
+
+	public void invalidateSessions() {
+		tokenVersion++;
+	}
+
 	public Long getId() {
 		return id;
 	}

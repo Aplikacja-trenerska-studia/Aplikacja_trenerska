@@ -1,30 +1,33 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { registerUser } from '@/lib/auth-api'
-import { setSession } from '@/lib/auth-storage'
+import { Notice } from '@/components/ui/notice'
+import { passwordError } from '@/lib/password-validation'
 import type { ApiError } from '@/types/auth'
 
 export function RegisterPage() {
-  const navigate = useNavigate()
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
     setError(null)
+    const validation = passwordError(password)
+    if (validation) { setError(validation); return }
     setLoading(true)
     try {
-      const auth = await registerUser({ email, password, displayName })
-      setSession(auth.accessToken, auth.user)
-      navigate('/')
+      const response = await registerUser({ email: email.trim(), password, displayName: displayName.trim() })
+      setMessage(response.message)
+      setPassword('')
     } catch (err) {
       const apiErr = err as ApiError
       setError(apiErr.message ?? 'Rejestracja nie powiodła się')
@@ -37,10 +40,10 @@ export function RegisterPage() {
     <Card>
       <CardHeader>
         <CardTitle>Rejestracja</CardTitle>
-        <CardDescription>Utwórz konto w aplikacji trenerskiej.</CardDescription>
+        <CardDescription>{message ? 'Jeszcze jeden krok — potwierdź adres e-mail.' : 'Utwórz konto w aplikacji trenerskiej.'}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+        {message ? <div className="space-y-5"><Notice variant="mail">{message}</Notice><p className="text-sm text-muted-foreground">Sprawdź skrzynkę odbiorczą i spam, a następnie otwórz link aktywacyjny.</p><Button className="h-auto min-h-10 w-full whitespace-normal text-center" asChild variant="outline"><Link to="/confirm-email">Wyślij ponownie link aktywacyjny</Link></Button><Button className="w-full" asChild><Link to="/logowanie">Przejdź do logowania</Link></Button></div> : <form className="flex flex-col gap-4" onSubmit={onSubmit}>
           <div className="space-y-2">
             <Label htmlFor="displayName">Imię lub nazwa wyświetlana</Label>
             <Input
@@ -49,6 +52,9 @@ export function RegisterPage() {
               onChange={(e) => setDisplayName(e.target.value)}
               required
               minLength={2}
+              maxLength={120}
+              // App-specific nicknames should not trigger browser profile autofill (Brave #59759).
+              autoComplete="off"
             />
           </div>
           <div className="space-y-2">
@@ -60,6 +66,7 @@ export function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              maxLength={255}
             />
           </div>
           <div className="space-y-2">
@@ -72,9 +79,10 @@ export function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
+              maxLength={72}
             />
           </div>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? <Notice variant="error">{error}</Notice> : null}
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? 'Tworzenie konta…' : 'Załóż konto'}
           </Button>
@@ -84,7 +92,7 @@ export function RegisterPage() {
               Zaloguj się
             </Link>
           </p>
-        </form>
+        </form>}
       </CardContent>
     </Card>
   )

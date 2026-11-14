@@ -39,12 +39,26 @@ public class SecurityConfig {
 				.csrf(AbstractHttpConfigurer::disable)
 				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.exceptionHandling(errors -> errors
+						.authenticationEntryPoint((request, response, ex) -> {
+							response.setStatus(401);
+							response.setContentType("application/json;charset=UTF-8");
+							response.getWriter().write("{\"message\":\"Zaloguj się, aby kontynuować\"}");
+						})
+						.accessDeniedHandler((request, response, ex) -> {
+							response.setStatus(403);
+							response.setContentType("application/json;charset=UTF-8");
+							response.getWriter().write("{\"message\":\"Brak uprawnień\"}");
+						}))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.GET, "/api/health").permitAll()
-						.requestMatchers("/api/auth/**").permitAll()
+						.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login",
+								"/api/auth/confirm", "/api/auth/resend-confirmation", "/api/auth/forgot-password",
+								"/api/auth/reset-password", "/api/auth/confirm-deletion").permitAll()
 						.requestMatchers("/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**").permitAll()
 						.requestMatchers("/api/**").authenticated()
-						.anyRequest().permitAll())
+						.requestMatchers("/error").permitAll()
+						.anyRequest().denyAll())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.build();
 	}
