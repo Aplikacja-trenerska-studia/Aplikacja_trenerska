@@ -1,5 +1,6 @@
 import { notifyAuthChanged } from '@/lib/auth-events'
 import type { UserResponse } from '@/types/auth'
+import { tokenExpiresAt } from '@/lib/token-expiry'
 
 const TOKEN_KEY = 'aplikacja_trenerska_access_token'
 const USER_KEY = 'aplikacja_trenerska_user'
@@ -18,7 +19,8 @@ export function getStoredUser(): UserResponse | null {
   const raw = localStorage.getItem(USER_KEY)
   if (!raw) return null
   try {
-    return JSON.parse(raw) as UserResponse
+    const user = JSON.parse(raw) as UserResponse
+    return typeof user.id === 'number' && typeof user.email === 'string' && typeof user.displayName === 'string' ? user : null
   } catch {
     return null
   }
@@ -31,5 +33,6 @@ export function clearSession() {
 }
 
 export function isLoggedIn(): boolean {
-  return Boolean(getAccessToken())
+  const token = getAccessToken()
+  return Boolean(token && tokenExpiresAt(token) > Date.now())
 }

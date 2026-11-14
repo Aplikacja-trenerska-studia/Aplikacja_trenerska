@@ -1,32 +1,42 @@
-# React + TypeScript + Vite
+# Frontend — aplikacja trenerska
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React + TypeScript, Vite, Tailwind i komponenty Radix. Interfejs jest po polsku i dostosowany do telefonów.
 
-Currently, two official plugins are available:
+## Uruchomienie
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Wymagany Node.js 22.14+ oraz backend na `localhost:8080`:
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm ci
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Frontend: http://localhost:5173. Vite przekazuje żądania `/api` do backendu.
+
+```bash
+npm run build
+npm run lint
+npm test
+```
+
+Testy używają wbudowanego runnera Node i obsługi TypeScript (`--experimental-strip-types`). Sprawdzają ważność tokenów i reguły walidacji hasła, w tym limit bajtów BCrypt dla znaków Unicode.
+
+## Strony i sesja
+
+| Trasa | Dostęp i działanie |
+| --- | --- |
+| `/` | Publiczna strona wejściowa |
+| `/logowanie`, `/rejestracja` | Dla niezalogowanych; rejestracja wymaga aktywacji e-mailem |
+| `/profil` | Po zalogowaniu i potwierdzeniu sesji przez `GET /api/users/me` |
+| `/forgot-password` | Wysłanie prośby o reset hasła |
+| `/reset-password?token=…` | Ustawienie i powtórzenie nowego hasła |
+| `/confirm-email?token=…` | Aktywacja konta przyciskiem; ponowna wysyłka linku |
+| `/confirm-deletion?token=…` | Jawne, ostateczne potwierdzenie usunięcia konta |
+
+Prośba o usunięcie konta wymaga aktualnego hasła i potwierdzenia zamiaru w profilu. Samo otwarcie linku z e-maila nie wykonuje żadnej operacji. Po udanym resecie hasła lub usunięciu konta lokalna sesja jest czyszczona, a token potwierdzenia usuwany z adresu.
+
+JWT i dane sesji są przechowywane w `localStorage`. Guard sprawdza lokalny termin ważności i weryfikuje sesję na serwerze przed pokazaniem profilu. Odpowiedź 401 z chronionego API usuwa sesję. Wylogowanie i zmiana sesji synchronizują się między kartami; utrata połączenia z API pozwala ponowić sprawdzenie bez wylogowania.
+
+Backend weryfikuje podpis JWT i uprawnienia; guard jest wyłącznie warstwą interfejsu. Publiczne operacje uwierzytelniania nie wysyłają starego JWT. Polityka `no-referrer` chroni linki z tokenami przed przekazaniem w nagłówku Referer.
+
+W Dockerze Nginx przekazuje `/api` do kontenera backendu i zapewnia obsługę bezpośredniego wejścia na trasy SPA.

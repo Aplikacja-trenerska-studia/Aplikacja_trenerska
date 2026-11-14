@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,9 +8,11 @@ import { Label } from '@/components/ui/label'
 import { loginUser } from '@/lib/auth-api'
 import { setSession } from '@/lib/auth-storage'
 import type { ApiError } from '@/types/auth'
+import { Notice } from '@/components/ui/notice'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -23,7 +25,8 @@ export function LoginPage() {
     try {
       const auth = await loginUser({ email, password })
       setSession(auth.accessToken, auth.user)
-      navigate('/')
+      const from = location.state?.from
+      navigate(typeof from === 'string' && from === '/profil' ? from : '/profil', { replace: true })
     } catch (err) {
       const apiErr = err as ApiError
       setError(apiErr.message ?? 'Logowanie nie powiodło się')
@@ -63,7 +66,8 @@ export function LoginPage() {
               minLength={8}
             />
           </div>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          <Link to="/forgot-password" className="self-end text-sm text-primary hover:underline">Nie pamiętasz hasła?</Link>
+          {error ? <Notice variant="error">{error}</Notice> : null}
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? 'Logowanie…' : 'Zaloguj się'}
           </Button>
@@ -73,6 +77,7 @@ export function LoginPage() {
               Zarejestruj się
             </Link>
           </p>
+          <p className="text-center text-sm text-muted-foreground">Konto nieaktywne? <Link to="/confirm-email" className="text-primary hover:underline">Potwierdź e-mail</Link></p>
         </form>
       </CardContent>
     </Card>

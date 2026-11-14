@@ -6,6 +6,8 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -38,5 +40,17 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<Map<String, String>> handleBadCredentials() {
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 				.body(Map.of("message", "Nieprawidłowy e-mail lub hasło"));
+	}
+
+	@ExceptionHandler(DisabledException.class)
+	public ResponseEntity<Map<String, String>> handleDisabledAccount() {
+		return ResponseEntity.status(HttpStatus.FORBIDDEN)
+				.body(Map.of("message", "Potwierdź adres e-mail, aby aktywować konto. Możesz poprosić o nowy link."));
+	}
+
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<Map<String, String>> handleConflict() {
+		return ResponseEntity.status(HttpStatus.CONFLICT)
+				.body(Map.of("message", "Nie można zapisać danych. Konto z tym adresem może już istnieć."));
 	}
 }
