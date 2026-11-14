@@ -2,7 +2,7 @@
 
 > Uzupełnienie do `PLAN.md`. Sprint = 1 tydzień (pon–nd). Termin oddania projektu: **19.12.2026**.
 
-> **Stan na 14.11.2026:** kalendarzowo trwa S1 (9–15.11). Funkcje kont przewidziane na S2 (16–22.11) wykonano częściowo z wyprzedzeniem. Poniższe statusy opisują aktualny kod i wykonane sprawdzenia.
+> **Stan na 15.11.2026:** kalendarzowo trwa S1 (9–15.11). Funkcje kont przewidziane na S2 (16–22.11) wykonano z wyprzedzeniem; 15.11 domknięto technicznie role i testy uprawnień (S2-04). Poniższe statusy opisują aktualny kod i wykonane sprawdzenia.
 
 **Legenda:** ✅ / `[x]` — technicznie wykonane i sprawdzone w opisanym zakresie; 🟡 — częściowo; ☐ / `[ ]` — pozostaje do wykonania albo potwierdzenia. Status techniczny nie potwierdza zespołowego review, merge do `main` ani całej Definition of Done.
 
@@ -97,7 +97,7 @@ Kolumna `Kto` w tabelach jest do uzupełnienia na początku sprintu.
 ### Nie zrobione / przeniesione
 
 - Potwierdzenie e-mail i reset hasła — **zakres Sprintu 2** (S2-01, S2-02), już wykonane z wyprzedzeniem
-- Domknięcie obsługi ról `USER` / `TRAINER` i testów uprawnień — **Sprint 2** (S2-04); enum, rola w JWT i `@PreAuthorize` dla kont są już w kodzie
+- Obsługa ról `USER` / `TRAINER` i testy uprawnień — **Sprint 2** (S2-04); domknięte technicznie 15.11, szczegóły w raporcie S2
 
 ### Problemy i ryzyka
 
@@ -120,12 +120,12 @@ Kolumna `Kto` w tabelach jest do uzupełnienia na początku sprintu.
 **Cel:** komplet funkcji kont (M1) oraz tworzenie własnych planów (M2).
 
 
-| ID | Zadanie | Tor | Kto | Status na 14.11 |
+| ID | Zadanie | Tor | Kto | Status na 15.11 |
 |---|---|---|---|---|
 | S2-01 | Potwierdzenie konta (token w e-mailu; w dev: Mailpit w Compose) | BE-1 | | ✅ aktywacja i ponowna wysyłka; SMTP sprawdzone w Dockerze |
 | S2-02 | Reset hasła (`forgot-password`, `reset-password`) | BE-1 | | ✅ token jednorazowy, unieważnienie sesji i testy |
 | S2-03 | Usunięcie konta: prośba z aktualnym hasłem i potwierdzenie tokenem z e-maila | BE-1 | | ✅ pełny przepływ i sprzątanie danych konta sprawdzone |
-| S2-04 | Role `USER` / `TRAINER`, zabezpieczenie endpointów (`@PreAuthorize`) | BE-1 | | 🟡 role w modelu i JWT, ochrona kont; nadawanie TRAINER i testy uprawnień do domknięcia |
+| S2-04 | Role `USER` / `TRAINER`, zabezpieczenie endpointów (`@PreAuthorize`) | BE-1 | | ✅ skrypt operatora USER ↔ TRAINER, unieważnianie sesji, ochrona ścieżek trenera i testy uprawnień |
 | S2-05 | Migracje: `exercises`, `workout_plans`, `plan_days`, `plan_exercises` | BE-2 | | ☐ brak modułu planów i jego tabel |
 | S2-06 | **Seed bazy ćwiczeń** (ok. 40–60: siłowe + domowe, z grupą mięśniową) | BE-2 | | ☐ do wykonania |
 | S2-07 | API: `GET /api/exercises` (filtry), CRUD `/api/plans` | BE-2 | | ☐ do wykonania |
@@ -137,15 +137,16 @@ Kolumna `Kto` w tabelach jest do uzupełnienia na początku sprintu.
 
 **Demo:** pełna ścieżka: rejestracja → potwierdzenie → login → utworzenie planu z ćwiczeniami.
 
-### Postęp Sprintu 2 — stan na 14.11.2026
+### Postęp Sprintu 2 — stan na 15.11.2026
 
-Zrealizowano technicznie **4 z 11 zadań**, 2 są częściowe, a 5 pozostaje otwartych. Poniższy raport jest aktualizacją postępu przed rozpoczęciem kalendarzowego S2; końcowy raport i review pozostają po stronie zespołu.
+Zrealizowano technicznie **5 z 11 zadań**, 1 jest częściowe, a 5 pozostaje otwartych. Poniższy raport jest aktualizacją postępu przed rozpoczęciem kalendarzowego S2; końcowy raport i review pozostają po stronie zespołu.
 
 ### Zrobione
 
 - [x] **S2-01** — rejestracja wymaga aktywacji mailem; można ponowić wysyłkę linku.
 - [x] **S2-02** — reset hasła przez jednorazowy link; stare hasło i wcześniejsze JWT tracą dostęp.
 - [x] **S2-03** — usunięcie konta wymaga aktualnego hasła i jawnego potwierdzenia z wiadomości; samo otwarcie linku nie usuwa danych.
+- [x] **S2-04 (15.11)** — operator nadaje/odbiera TRAINER przez `tools/set-user-role.sql`; tylko aktywne konta USER/TRAINER, zmiana unieważnia JWT. Rejestracja pozostaje USER. Zabezpieczono przestrzenie `/api/trainer/**` i `/api/groups/**` (także ścieżki bazowe); funkcje trenera pozostają zakresem S3. Dodano 7 testów integracyjnych ról (JWT, 401/403, `@PreAuthorize`, zmiana i odebranie uprawnień) oraz test skryptu na jednorazowym PostgreSQL 16: `pwsh -NoProfile -File tests/smoke-roles.ps1`. Instrukcja operatora: `docs/ACCOUNTS.md`.
 - [x] **S2-10** — profil, guard sesji, ekrany potwierdzenia/resetu, wylogowanie i synchronizacja sesji między kartami.
 - [x] **Weryfikacja kont** — 15 testów backendu (14 integracyjnych i kontekst), 4 testy pomocniczych funkcji frontendu, build i lint.
 - [x] **Docker i SMTP** — cztery kontenery, migracje V1/V2 na PostgreSQL, wiadomości w Mailpit, przepływy przez nginx; test równoległego resetu dopuszcza tylko jedno użycie tokenu. Powtarzalny test: `node tests/smoke-accounts.mjs` z katalogu głównego repozytorium.
@@ -153,7 +154,6 @@ Zrealizowano technicznie **4 z 11 zadań**, 2 są częściowe, a 5 pozostaje otw
 
 ### Pozostało do zamknięcia S2
 
-- [ ] **S2-04** — ustalić i wdrożyć bezpieczny sposób nadawania roli TRAINER; dodać testy dostępu zgodnego z rolami. Rejestracja obecnie zawsze tworzy USER.
 - [ ] **S2-05** — dodać migracje i model ćwiczeń, planów, dni treningowych oraz ćwiczeń w planie.
 - [ ] **S2-06** — przygotować około 40–60 ćwiczeń siłowych/domowych z grupami mięśniowymi.
 - [ ] **S2-07** — zaimplementować listę ćwiczeń z filtrami i CRUD planów. Zapewnić, że użytkownik ma dostęp wyłącznie do swoich planów.

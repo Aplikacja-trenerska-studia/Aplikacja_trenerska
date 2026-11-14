@@ -59,6 +59,8 @@ npm test
 
 Opis API i scenariusze sprawdzenia aktywacji, resetu hasła i usuwania konta: [Konta użytkowników](docs/ACCOUNTS.md).
 
+Nadawanie i odbieranie roli trenera: [Role USER / TRAINER](docs/ACCOUNTS.md#role-user--trainer). Test skryptu operatora na jednorazowej bazie PostgreSQL: `pwsh -NoProfile -File tests/smoke-roles.ps1` (wymaga Dockera).
+
 Test pełnego stacku Docker (z katalogu głównego repozytorium):
 
 ```powershell

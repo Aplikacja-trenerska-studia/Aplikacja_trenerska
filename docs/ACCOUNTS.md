@@ -49,6 +49,27 @@ Wszystkie żądania z treścią używają `Content-Type: application/json`. Chro
 
 Zapisy w nawiasach klamrowych w tabeli oznaczają nazwy pól, a nie gotowy JSON do wysłania. Błędy API zawierają `message`, a błędy walidacji także `errors` z komunikatami przypisanymi do pól.
 
+## Role USER / TRAINER
+
+Rejestracja zawsze tworzy `USER`; pole `role` przesłane przez klienta nie nadaje uprawnień. Obie role mogą korzystać z profilu i usuwania własnego konta. Ścieżki `/api/trainer`, `/api/trainer/**`, `/api/groups` i `/api/groups/**` są zarezerwowane dla `TRAINER` (implementacja funkcji trenera należy do S3). Nowe kontrolery trenera należy dodatkowo zabezpieczyć `@PreAuthorize("hasRole('TRAINER')")`. Brak prawidłowej sesji daje `401`, brak wymaganej roli — `403`.
+
+Rolę nadaje lub odbiera operator mający dostęp do bazy, po sprawdzeniu tożsamości i uprawnienia danej osoby do pełnienia funkcji trenera. Nie ma publicznego endpointu zmiany roli ani możliwości samodzielnego awansu z profilu. Z katalogu głównego repozytorium, przy uruchomionej bazie Compose:
+
+```powershell
+# Nadaj TRAINER istniejącemu, aktywowanemu kontu.
+Get-Content -Raw tools/set-user-role.sql | docker compose exec -T db psql -X -U aplikacja -d aplikacja_trenerska -v ON_ERROR_STOP=1 -v 'email=trener@example.com' -v role=TRAINER -f -
+# Sprawdź $LASTEXITCODE: 0 oznacza sukces; inny kod oznacza błąd i rollback.
+
+# Odbierz rolę trenera.
+Get-Content -Raw tools/set-user-role.sql | docker compose exec -T db psql -X -U aplikacja -d aplikacja_trenerska -v ON_ERROR_STOP=1 -v 'email=trener@example.com' -v role=USER -f -
+```
+
+Skrypt blokuje rekord na czas transakcji, dopuszcza wyłącznie przejścia `USER` ↔ `TRAINER` i odmawia zmiany nieistniejących lub nieaktywnych kont oraz kont `ADMIN`. Każda faktyczna zmiana zwiększa `token_version`: wcześniejsze JWT przestają działać i użytkownik musi ponownie się zalogować. Powtórzenie tej samej roli niczego nie zmienia. Wynik pokazuje ID, e-mail, rolę i wersję sesji do sprawdzenia przez operatora. Parametry są cytowane przez psql; skrypt należy uruchamiać z `-X`, `ON_ERROR_STOP=1` i `-f -`, jak w przykładzie.
+
+Rola w JWT służy jako informacja dla klienta. Backend ustala uprawnienia na podstawie aktualnej roli z bazy przy każdym żądaniu. Istniejący `ADMIN` nie dziedziczy automatycznie uprawnień trenera; panel administracyjny pozostaje poza S2.
+
+Testy ról: `RoleSecurityIntegrationTests` sprawdzają prawdziwe JWT, reguły URL i `@PreAuthorize` na kontrolerze istniejącym wyłącznie w testach. Skrypt operatora można sprawdzić poleceniem `pwsh -NoProfile -File tests/smoke-roles.ps1`. Test wymaga Dockera, uruchamia jednorazową bazę PostgreSQL 16 bez publikowania portów i usuwa kontener po zakończeniu; nie korzysta z bazy aplikacji.
+
 ## Zabezpieczenia
 
 - Tokeny z wiadomości mają określone przeznaczenie i termin ważności. Nie można użyć tokenu aktywacji do zmiany hasła lub usunięcia konta.

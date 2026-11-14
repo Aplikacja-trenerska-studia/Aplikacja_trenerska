@@ -102,7 +102,7 @@ Priorytety (zgodnie z założeniem etapowej realizacji z formularza):
 - [x] Rejestracja z potwierdzeniem konta przez e-mail
 - [x] Logowanie / wylogowanie (JWT + Spring Security)
 - [x] Role `USER`, `TRAINER`, `ADMIN` w modelu i obsłudze sesji; rejestracja tworzy konto `USER`
-- [ ] Sposób nadawania roli `TRAINER` i testy rozróżniające uprawnienia ról (pozostała część S2-04)
+- [x] Sposób nadawania roli `TRAINER` przez operatora (`tools/set-user-role.sql`), unieważnienie sesji po zmianie roli i testy rozróżniające uprawnienia ról (S2-04, 15.11.2026)
 - [x] Przypomnienie hasła (reset przez e-mail/token)
 - [x] Usunięcie konta po ponownym podaniu hasła i potwierdzeniu przez e-mail
 - [x] Ochrona obecnych endpointów użytkownika przez JWT i `@PreAuthorize`, ochrona trasy `/profil`
