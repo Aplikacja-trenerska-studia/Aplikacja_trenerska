@@ -2,7 +2,7 @@
 
 > Uzupełnienie do `PLAN.md`. Sprint = 1 tydzień (pon–nd). Termin oddania projektu: **19.12.2026**.
 
-> **Stan na 15.11.2026:** kalendarzowo trwa S1 (9–15.11). Funkcje kont przewidziane na S2 (16–22.11) wykonano z wyprzedzeniem; 15.11 domknięto technicznie role i testy uprawnień (S2-04). Poniższe statusy opisują aktualny kod i wykonane sprawdzenia.
+> **Stan na 15.11.2026:** kalendarzowo trwa S1 (9–15.11). Funkcje kont przewidziane na S2 (16–22.11) wykonano z wyprzedzeniem; 15.11 domknięto technicznie role i testy uprawnień (S2-04), model i migrację ćwiczeń/planów (S2-05) oraz katalog 48 ćwiczeń (S2-06). Poniższe statusy opisują aktualny kod i wykonane sprawdzenia.
 
 **Legenda:** ✅ / `[x]` — technicznie wykonane i sprawdzone w opisanym zakresie; 🟡 — częściowo; ☐ / `[ ]` — pozostaje do wykonania albo potwierdzenia. Status techniczny nie potwierdza zespołowego review, merge do `main` ani całej Definition of Done.
 
@@ -126,20 +126,20 @@ Kolumna `Kto` w tabelach jest do uzupełnienia na początku sprintu.
 | S2-02 | Reset hasła (`forgot-password`, `reset-password`) | BE-1 | | ✅ token jednorazowy, unieważnienie sesji i testy |
 | S2-03 | Usunięcie konta: prośba z aktualnym hasłem i potwierdzenie tokenem z e-maila | BE-1 | | ✅ pełny przepływ i sprzątanie danych konta sprawdzone |
 | S2-04 | Role `USER` / `TRAINER`, zabezpieczenie endpointów (`@PreAuthorize`) | BE-1 | | ✅ skrypt operatora USER ↔ TRAINER, unieważnianie sesji, ochrona ścieżek trenera i testy uprawnień |
-| S2-05 | Migracje: `exercises`, `workout_plans`, `plan_days`, `plan_exercises` | BE-2 | | ☐ brak modułu planów i jego tabel |
-| S2-06 | **Seed bazy ćwiczeń** (ok. 40–60: siłowe + domowe, z grupą mięśniową) | BE-2 | | ☐ do wykonania |
-| S2-07 | API: `GET /api/exercises` (filtry), CRUD `/api/plans` | BE-2 | | ☐ do wykonania |
-| S2-08 | Frontend: lista ćwiczeń, lista planów | FE-1 | | ☐ do wykonania |
-| S2-09 | Frontend: **kreator planu** (dni → ćwiczenia → serie/powtórzenia/ciężar) | FE-1 | | ☐ do wykonania |
+| S2-05 | Migracje: `exercises`, `workout_plans`, `plan_days`, `plan_exercises` | BE-2 | | ✅ V3, encje i repozytoria; właściciel, kolejność, ograniczenia i kaskady usuwania sprawdzone |
+| S2-06 | **Seed bazy ćwiczeń** (ok. 40–60: siłowe + domowe, z grupą mięśniową) | BE-2 | | ✅ V4: 48 ćwiczeń (24 siłowe, 24 domowe), polskie nazwy i opisy, wszystkie 12 grup mięśniowych |
+| S2-07 | API: `GET /api/exercises` (filtry), CRUD `/api/plans` | BE-2 | | ✅ katalog z filtrami i pełny CRUD własnych planów; walidacja i dostęp według właściciela |
+| S2-08 | Frontend: lista ćwiczeń, lista planów | FE-1 | | ✅ chronione listy z API, filtry w URL, szczegóły planu, stany ładowania/błędów/puste; sprawdzony desktop i widok mobilny |
+| S2-09 | Frontend: **kreator planu** (dni → ćwiczenia → serie/powtórzenia/ciężar) | FE-1 | | ✅ tworzenie, edycja, kolejność dni/ćwiczeń, walidacja i usuwanie z potwierdzeniem; pełny przepływ UI sprawdzony w Dockerze |
 | S2-10 | Frontend: ochrona tras (guard), strona profilu z usunięciem konta, ekrany potwierdzenia/resetu hasła | FE-2 | | ✅ sprawdzony profil, ekrany i przekierowanie do logowania |
-| S2-11 | Pierwsze testy backendu (auth + plany, happy path) | BE-2 | | 🟡 testy kont gotowe; testy planów po implementacji |
+| S2-11 | Pierwsze testy backendu (auth + plany, happy path) | BE-2 | | ✅ testy kont, modelu, katalogu i HTTP planów; CRUD, walidacja, odmowa dostępu do cudzych danych |
 
 
 **Demo:** pełna ścieżka: rejestracja → potwierdzenie → login → utworzenie planu z ćwiczeniami.
 
 ### Postęp Sprintu 2 — stan na 15.11.2026
 
-Zrealizowano technicznie **5 z 11 zadań**, 1 jest częściowe, a 5 pozostaje otwartych. Poniższy raport jest aktualizacją postępu przed rozpoczęciem kalendarzowego S2; końcowy raport i review pozostają po stronie zespołu.
+Zrealizowano technicznie **11 z 11 zadań** i wykonano demo S2 na lokalnym Docker Compose. Końcowy raport, review/merge i sprawdzenie na rzeczywistym telefonie pozostają po stronie zespołu; status techniczny nie zamyka całej Definition of Done.
 
 ### Zrobione
 
@@ -148,19 +148,23 @@ Zrealizowano technicznie **5 z 11 zadań**, 1 jest częściowe, a 5 pozostaje ot
 - [x] **S2-03** — usunięcie konta wymaga aktualnego hasła i jawnego potwierdzenia z wiadomości; samo otwarcie linku nie usuwa danych.
 - [x] **S2-04 (15.11)** — operator nadaje/odbiera TRAINER przez `tools/set-user-role.sql`; tylko aktywne konta USER/TRAINER, zmiana unieważnia JWT. Rejestracja pozostaje USER. Zabezpieczono przestrzenie `/api/trainer/**` i `/api/groups/**` (także ścieżki bazowe); funkcje trenera pozostają zakresem S3. Dodano 7 testów integracyjnych ról (JWT, 401/403, `@PreAuthorize`, zmiana i odebranie uprawnień) oraz test skryptu na jednorazowym PostgreSQL 16: `pwsh -NoProfile -File tests/smoke-roles.ps1`. Instrukcja operatora: `docs/ACCOUNTS.md`.
 - [x] **S2-10** — profil, guard sesji, ekrany potwierdzenia/resetu, wylogowanie i synchronizacja sesji między kartami.
+- [x] **S2-05 (15.11)** — migracja V3, modele i repozytoria ćwiczeń, planów, dni i wpisów ćwiczeń. Plan ma właściciela; indeksy określają kolejność; baza wymusza dodatnie serie/powtórzenia, nieujemny ciężar i unikalne pozycje. Usunięcie konta usuwa jego plany, dni i wpisy, zachowując katalog oraz cudze plany. Pełne 48 testów backendu przeszło na PostgreSQL 16 (w tym 25 testów modelu i nowy test usunięcia konta z planem); dodanie V3 do V2 zachowuje istniejące konta/tokeny. Powtarzalny test: `pwsh -NoProfile -File tests/test-workout-postgres.ps1`. Szczegóły: `docs/WORKOUT_MODEL.md`.
 - [x] **Weryfikacja kont** — 15 testów backendu (14 integracyjnych i kontekst), 4 testy pomocniczych funkcji frontendu, build i lint.
+- [x] **S2-06 (15.11)** — V4 dodaje 48 wspólnych ćwiczeń bez przypisania do konta: po 2 siłowe i 2 domowe dla każdej z 12 grup mięśniowych. Każdy wpis ma polską nazwę i opis z wymaganym sprzętem. ID generuje baza, a Flyway zapobiega ponownemu wykonaniu migracji. Trzy nowe testy katalogu sprawdzają kompletność, unikalność, polskie znaki, typy/grupy i brak duplikacji przy ponownym uruchomieniu Flyway. Pełny zestaw 51 testów backendu przeszedł na H2 i PostgreSQL 16. Test aktualizacji V3 → V4 na PostgreSQL 16 zachowuje istniejące ćwiczenie i plan. Powtarzalna weryfikacja PostgreSQL: `pwsh -NoProfile -File tests/test-workout-postgres.ps1`.
 - [x] **Docker i SMTP** — cztery kontenery, migracje V1/V2 na PostgreSQL, wiadomości w Mailpit, przepływy przez nginx; test równoległego resetu dopuszcza tylko jedno użycie tokenu. Powtarzalny test: `node tests/smoke-accounts.mjs` z katalogu głównego repozytorium.
 - [x] **UI** — profil i ekrany kont sprawdzone na komputerze oraz w emulowanym widoku mobilnym. Użytkownik potwierdził, że wpisanie `mat` w Brave po poprawce nie powoduje crasha.
 
+- [x] **S2-07 — katalog ćwiczeń:** `GET /api/exercises` wymaga aktywnej sesji JWT i roli USER/TRAINER/ADMIN. Filtry `muscleGroup`, `type` i `q` łączą się warunkiem AND; wyszukiwanie nazwy ignoruje wielkość liter i traktuje metaznaki LIKE dosłownie. Odpowiedź jest uporządkowaną tablicą DTO bez danych autora. Dodano 19 testów HTTP. Kontrakt: [EXERCISES_API.md](EXERCISES_API.md).
+- [x] **S2-07 — plany:** POST/GET `/api/plans`, GET/PUT/DELETE `/api/plans/{id}`; właściciel z sesji, cudzy i nieistniejący plan zwracają `404`, także dla TRAINER/ADMIN. Pełny PUT zapisuje kolejność z tablic, zastępując dzieci w transakcji; usuwanie zachowuje katalog. Wymuszono walidację nazw, kolekcji, istniejących ćwiczeń, serii/powtórzeń i ciężaru. Kontrakt: [WORKOUT_PLANS_API.md](WORKOUT_PLANS_API.md).
+- [x] **S2-11 — testy HTTP planów:** 41 nowych przypadków wykonuje żądania bez nadrzędnej transakcji testowej: CRUD trzech ról, wielokrotna edycja, walidacja, limity, kaskady, nieaktywne/unieważnione sesje, próba podmiany właściciela i odmowa dostępu do cudzych danych. Pełny zestaw 111 testów backendu przeszedł na H2 i PostgreSQL 16. Skrypt testów PostgreSQL czeka na gotowość serwera TCP, unikając przejściowego serwera inicjalizacji kontenera.
+
+- [x] **S2-08:** dodano `/cwiczenia`, `/plany`, `/plany/:id`, nawigację i powrót po logowaniu z zachowaniem filtrów. Build, lint i 9 testów frontendu przeszły. Test `tests/smoke-workout-ui.mjs` przeszedł na rzeczywistym stacku Compose: filtry/historia, ładowanie, puste listy, plan i szczegóły, błędy/ponowienie, 404/401 oraz widoki 1280 × 900 i 375 × 812 bez poziomego przewijania i błędów JavaScript. Zrzuty sprawdzono wizualnie. Szczegóły: [WORKOUT_FRONTEND.md](WORKOUT_FRONTEND.md).
+
+- [x] **S2-09:** `/plany/nowy` i `/plany/:id/edytuj` zapisują pełny plan przez POST/PUT. Wybór z katalogu ma filtry; dni i wpisy można dodawać, usuwać i przestawiać. Walidacja zachowuje szkic po błędzie, obsługuje ciężar z przecinkiem i ograniczenia API. DELETE wymaga osobnego potwierdzenia w dialogu; anulowanie i błąd nie usuwają planu. Build, lint bez ostrzeżeń i 16 testów frontendu przeszły.
+- [x] **Demo S2:** `tests/smoke-workout-ui.mjs` przeszedł na Compose przez nginx z rzeczywistym API i Mailpit: rejestracja w UI → aktywacja w UI z linku Mailpit → logowanie → utworzenie planu w kreatorze → edycja i trwały odczyt → usunięcie z potwierdzeniem. Sprawdzono też walidację, kolejność, zachowanie szkicu przy błędach POST/PUT, anulowanie i ponawianie DELETE oraz desktop 1280 × 900 i widok mobilny 375 × 812. Brak poziomego przewijania i błędów JavaScript; zrzuty sprawdzono wizualnie. Konto i plany testowe usunięto po teście. Szczegóły: [WORKOUT_FRONTEND.md](WORKOUT_FRONTEND.md).
+
 ### Pozostało do zamknięcia S2
 
-- [ ] **S2-05** — dodać migracje i model ćwiczeń, planów, dni treningowych oraz ćwiczeń w planie.
-- [ ] **S2-06** — przygotować około 40–60 ćwiczeń siłowych/domowych z grupami mięśniowymi.
-- [ ] **S2-07** — zaimplementować listę ćwiczeń z filtrami i CRUD planów. Zapewnić, że użytkownik ma dostęp wyłącznie do swoich planów.
-- [ ] **S2-08** — podłączyć listę ćwiczeń i listę planów na frontendzie.
-- [ ] **S2-09** — dodać kreator i obsługę edycji planu: dni, ćwiczenia, serie, powtórzenia, ciężar oraz usuwanie planów.
-- [ ] **S2-11** — uzupełnić testy planów: tworzenie, odczyt, edycja, usunięcie, walidacja i odmowa dostępu do cudzych danych.
-- [ ] **Demo S2** — sprawdzić w Dockerze pełną ścieżkę: rejestracja → potwierdzenie → logowanie → utworzenie planu z ćwiczeniami; sprawdzić nowe widoki na komputerze i w układzie mobilnym.
 - [ ] **Domknięcie zespołowe** — przypisać właścicieli zadań, wykonać PR/review i merge oraz potwierdzić pozostałe kryteria Definition of Done, w tym sprawdzenie na rzeczywistym telefonie.
 
 ### Problemy i ryzyka
@@ -168,7 +172,7 @@ Zrealizowano technicznie **5 z 11 zadań**, 1 jest częściowe, a 5 pozostaje ot
 - Wrapper Maven miał CRLF, co blokowało build kontenera Linux. Naprawiono końce linii i regułę `.gitattributes`; ponowny build i start przeszły.
 - Brave crashował przy wpisaniu trzech liter w pole nazwy. Zastosowano `autocomplete="off"` wyłącznie dla nazwy wyświetlanej; użytkownik potwierdził skuteczność po Ctrl+F5.
 - Mailpit przechwytuje wiadomości lokalnie — nie trafiają do rzeczywistych skrzynek. Zewnętrzny SMTP jest konfiguracją wdrożeniową, a lokalny Mailpit spełnia założenia testów S2.
-- Przy dodaniu planów trzeba rozszerzyć usuwanie konta o nowe dane i sprawdzić integralność relacji.
+- Usuwanie konta obejmuje już model planów (V3); przy dodawaniu wyników treningów i relacji trenerskich w S3 trzeba rozszerzyć zasady usuwania i testy integralności o nowe tabele.
 
 Kontrakt endpointów kont i scenariusze weryfikacji: [ACCOUNTS.md](ACCOUNTS.md).
 

@@ -181,6 +181,47 @@ class AccountSecurityIntegrationTests {
     }
 
     @Test
+    void confirmedDeletionRemovesOwnedPlansAndPreservesOtherUsersAndSharedExercises() throws Exception {
+        String jwt = activatedUserJwt();
+        var initialCatalogIds = jdbc.queryForList("select id from exercises order by id", Long.class);
+        jdbc.update("""
+                insert into users (email, password_hash, display_name)
+                values ('other@example.com', 'unused', 'Other athlete')
+                """);
+        jdbc.update("""
+                insert into exercises (name, muscle_group, type, created_by)
+                select 'Shared exercise', 'CHEST', 'HOME', id from users where email = ?
+                """, EMAIL);
+        Long sharedExerciseId = jdbc.queryForObject("select id from exercises where name = 'Shared exercise'", Long.class);
+        jdbc.update("""
+                insert into workout_plans (owner_id, name)
+                select id, 'Plan for ' || email from users
+                """);
+        jdbc.update("insert into plan_days (plan_id, day_index, name) select id, 0, 'Day one' from workout_plans");
+        jdbc.update("""
+                insert into plan_exercises (plan_day_id, exercise_id, sets, reps, order_index)
+                select d.id, e.id, 3, 10, 0 from plan_days d cross join exercises e where e.id = ?
+                """, sharedExerciseId);
+
+        deletionRequest(jwt, PASSWORD).andExpect(status().isOk());
+        assertThat(jdbc.queryForObject("select count(*) from workout_plans", Integer.class)).isEqualTo(2);
+        confirmDeletion(mailToken("confirm-deletion")).andExpect(status().isOk());
+
+        assertThat(jdbc.queryForObject("select email from users", String.class)).isEqualTo("other@example.com");
+        assertThat(jdbc.queryForObject("select count(*) from verification_tokens", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from workout_plans", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select count(*) from plan_days", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select count(*) from plan_exercises", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select count(*) from exercises", Integer.class)).isEqualTo(initialCatalogIds.size() + 1);
+        assertThat(jdbc.queryForObject("select created_by from exercises where id = ?", Long.class, sharedExerciseId)).isNull();
+        me(jwt).andExpect(status().isUnauthorized());
+        // Remove only the test fixture; the starting catalog must survive account deletion.
+        jdbc.update("delete from users");
+        jdbc.update("delete from exercises where id = ?", sharedExerciseId);
+        assertThat(jdbc.queryForList("select id from exercises order by id", Long.class)).isEqualTo(initialCatalogIds);
+    }
+
+    @Test
     void passwordResetAlsoInvalidatesPendingDeletion() throws Exception {
         String jwt = activatedUserJwt();
         deletionRequest(jwt, PASSWORD).andExpect(status().isOk());

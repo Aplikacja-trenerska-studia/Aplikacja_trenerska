@@ -9,6 +9,7 @@ import { loginUser } from '@/lib/auth-api'
 import { setSession } from '@/lib/auth-storage'
 import type { ApiError } from '@/types/auth'
 import { Notice } from '@/components/ui/notice'
+import { loginReturnPath } from '@/lib/return-path'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -25,8 +26,7 @@ export function LoginPage() {
     try {
       const auth = await loginUser({ email, password })
       setSession(auth.accessToken, auth.user)
-      const from = location.state?.from
-      navigate(typeof from === 'string' && from === '/profil' ? from : '/profil', { replace: true })
+      navigate(loginReturnPath(location.state?.from), { replace: true })
     } catch (err) {
       const apiErr = err as ApiError
       setError(apiErr.message ?? 'Logowanie nie powiodło się')

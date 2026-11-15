@@ -11,7 +11,7 @@
 
 > **Legenda:** sekcje oznaczone 📄 pochodzą wprost z formularza SMART. Sekcje oznaczone 💡 to propozycje techniczne (do uzgodnienia w zespole).
 
-> **Stan checklist: 14.11.2026.** `[x]` oznacza funkcję technicznie wdrożoną i sprawdzoną w opisanym zakresie; nie potwierdza zespołowego review, merge do `main` ani spełnienia Definition of Done całego projektu. Kalendarzowo trwa Sprint 1 (9–15.11); część zadań kont ze Sprintu 2 wykonano z wyprzedzeniem. Szczegółowy status i pozostałe zadania: [SPRINTY.md](SPRINTY.md).
+> **Stan checklist: 15.11.2026.** `[x]` oznacza funkcję technicznie wdrożoną i sprawdzoną w opisanym zakresie; nie potwierdza zespołowego review, merge do `main` ani spełnienia Definition of Done całego projektu. Kalendarzowo trwa Sprint 1 (9–15.11); konta, fundament modelu planów i dane katalogu ćwiczeń ze Sprintu 2 wykonano z wyprzedzeniem. Szczegółowy status i pozostałe zadania: [SPRINTY.md](SPRINTY.md).
 
 ---
 
@@ -93,7 +93,7 @@ Priorytety (zgodnie z założeniem etapowej realizacji z formularza):
 - [x] Repozytorium Git i README z instrukcją uruchomienia
 - [ ] Uzgodniona konwencja branchy i PR-ów oraz zespołowe review
 - [x] `docker-compose.yml`: `db` (TimescaleDB), `backend`, `frontend`, lokalny SMTP Mailpit
-- [x] Flyway: migracje V1/V2 kont i tokenów oraz `.env.example`
+- [x] Flyway: migracje V1/V2 kont i tokenów, V3 ćwiczeń i planów, V4 katalogu ćwiczeń oraz `.env.example`
 - [x] Aplikacja uruchamia się jedną komendą: `docker compose up --build`
 - [x] Layout responsywny (mobile-first) obecnych ekranów kont, sprawdzony na komputerze i w emulowanym widoku mobilnym
 
@@ -106,18 +106,25 @@ Priorytety (zgodnie z założeniem etapowej realizacji z formularza):
 - [x] Przypomnienie hasła (reset przez e-mail/token)
 - [x] Usunięcie konta po ponownym podaniu hasła i potwierdzeniu przez e-mail
 - [x] Ochrona obecnych endpointów użytkownika przez JWT i `@PreAuthorize`, ochrona trasy `/profil`
-- [ ] Autoryzacja nowych endpointów według ról i własności danych podczas wdrażania planów oraz modułu trenera
+- [x] Autoryzacja katalogu i CRUD planów według ról i właściciela z sesji; testy odmowy dostępu do cudzych planów
+- [ ] Autoryzacja przyszłych endpointów modułu trenera i kolejnych modułów podczas ich wdrażania
 
-Implementacja kont i kontrakt API: [ACCOUNTS.md](ACCOUNTS.md). Reset hasła unieważnia wcześniejsze JWT; jednorazowe tokeny mają przeznaczenie, termin ważności i skrót w bazie. Zaliczone sprawdzenia: 15 testów backendu (14 integracyjnych i uruchomienie kontekstu), 4 testy pomocniczych funkcji frontendu, build i lint frontendu oraz test przepływów HTTP przez nginx z PostgreSQL i rzeczywistą wysyłką SMTP do Mailpit (`tests/smoke-accounts.mjs`). Potwierdzono również obejście crasha Brave podczas wpisywania nicku (`autocomplete="off"`).
+Implementacja kont i kontrakt API: [ACCOUNTS.md](ACCOUNTS.md). Reset hasła unieważnia wcześniejsze JWT; jednorazowe tokeny mają przeznaczenie, termin ważności i skrót w bazie. Zaliczone sprawdzenia backendu na H2 i PostgreSQL 16: 111 testów (15 kont, 7 ról, 25 modelu planów, 3 katalogu, 19 API ćwiczeń, 41 API planów i uruchomienie kontekstu), w tym CRUD i izolacja własnych planów, walidacja oraz usuwanie konta z planem przy zachowaniu katalogu. Sprawdzono także aktualizacje V2 → V3 → V4 z istniejącymi danymi. Wcześniej sprawdzono 4 testy pomocniczych funkcji frontendu, build i lint frontendu oraz przepływy kont przez nginx z PostgreSQL i rzeczywistą wysyłką SMTP do Mailpit (`tests/smoke-accounts.mjs`). Potwierdzono również obejście crasha Brave podczas wpisywania nicku (`autocomplete="off"`).
 
 Mailpit przechwytuje wiadomości lokalnie; dostarczanie do rzeczywistych skrzynek wymaga konfiguracji zewnętrznego SMTP. Nie jest to warunek zamknięcia lokalnego zakresu Sprintu 2.
 
 ### M2. Moduł użytkownika — plany treningowe (P1)
 
-- [ ] **Baza ćwiczeń** (nazwa, grupa mięśniowa, opis, typ: siłowe / domowe)
-- [ ] Tworzenie własnych planów treningowych (siłowe i domowe)
-- [ ] Plan → dni treningowe → ćwiczenia (serie, powtórzenia, ciężar)
-- [ ] Edycja i usuwanie planów
+- [x] Fundament modelu: migracja V3, encje i repozytoria ćwiczeń, planów, dni i wpisów ćwiczeń; właściciel, kolejność i kaskady usuwania (S2-05)
+- [x] **Dane bazy ćwiczeń** — 48 wpisów z polską nazwą, grupą mięśniową, opisem i typem siłowe / domowe (V4, S2-06); widok katalogu gotowy w S2-08
+- [x] API odczytu katalogu: `GET /api/exercises` z filtrami grupy mięśniowej, typu i fragmentu nazwy; dostęp przez JWT (część S2-07)
+- [x] API CRUD własnych planów: tworzenie, lista, szczegóły, pełna edycja i usuwanie wraz z testami HTTP (S2-07, S2-11)
+- [x] Frontend listy ćwiczeń z filtrami i listy własnych planów oraz podgląd szczegółów, chronione trasami sesji (S2-08)
+- [x] Tworzenie własnych planów treningowych przez frontend (S2-09)
+- [x] Kreator: plan → dni treningowe → ćwiczenia (serie, powtórzenia, ciężar), zmiana kolejności i walidacja zgodna z API
+- [x] Edycja i usuwanie planów przez frontend z potwierdzeniem usuwania i zachowaniem szkicu przy błędzie zapisu
+
+Schemat, katalog i zasady integralności: [WORKOUT_MODEL.md](WORKOUT_MODEL.md). Odczyt katalogu: [EXERCISES_API.md](EXERCISES_API.md). CRUD planów: [WORKOUT_PLANS_API.md](WORKOUT_PLANS_API.md). Listy, kreator, edycja i usuwanie: [WORKOUT_FRONTEND.md](WORKOUT_FRONTEND.md). Build, lint bez ostrzeżeń i 16 testów frontendu przeszły. Pełny przepływ rejestracja → aktywacja → logowanie → utworzenie planu przez UI, a następnie edycja i usuwanie, sprawdzono w Dockerze testem `tests/smoke-workout-ui.mjs`; desktop i mobilny viewport bez błędów JavaScript. Test na rzeczywistym telefonie pozostaje do wykonania.
 
 ### M3. Śledzenie postępów (P1)
 
@@ -192,9 +199,9 @@ SELECT create_hypertable('body_metrics', 'time');
 | GET | `/api/users/me` | Dane własnego konta | Zalogowany |
 | POST | `/api/users/me/deletion-request` | Prośba o usunięcie konta (`password` w JSON), wysyłka e-maila | Zalogowany |
 | POST | `/api/auth/confirm-deletion` | Usunięcie konta po potwierdzeniu (`token` w JSON) | — |
-| GET | `/api/exercises` | Baza ćwiczeń | USER |
-| GET/POST | `/api/plans` | Lista / tworzenie planów | USER |
-| GET/PUT/DELETE | `/api/plans/{id}` | Szczegóły / edycja / usunięcie | USER |
+| GET | `/api/exercises?muscleGroup=&type=&q=` | Katalog z filtrami grupy, typu i nazwy — wdrożony | USER / TRAINER / ADMIN |
+| GET/POST | `/api/plans` | Lista / tworzenie własnych planów — wdrożone | USER / TRAINER / ADMIN |
+| GET/PUT/DELETE | `/api/plans/{id}` | Szczegóły / edycja / usunięcie własnego planu — wdrożone | USER / TRAINER / ADMIN |
 | POST | `/api/plans/{id}/share` | Udostępnienie planu | USER |
 | POST | `/api/results` | Zapis wyniku ćwiczenia | USER |
 | GET | `/api/results?exerciseId=&from=&to=` | Historia wyników | USER |
@@ -254,11 +261,11 @@ Postęp oceniamy za pomocą następujących wskaźników:
 - [ ] **≥ 6 modułów** zrealizowanych (w stosunku do zaplanowanych w zakresie projektu)
 - [ ] **Działające, przetestowane przepływy kluczowe:**
   - [x] rejestracja, potwierdzenie e-maila i logowanie; dodatkowo reset hasła i usuwanie konta
-  - [ ] utworzenie planu treningowego
+  - [x] utworzenie planu treningowego przez kreator, edycja i usunięcie z potwierdzeniem
   - [ ] zapis wyniku treningu
   - [ ] utworzenie grupy przez trenera i przypisanie planu podopiecznemu
 - [ ] Aplikacja **poprawnie wyświetla się i działa na komputerach i urządzeniach mobilnych** — ekrany kont sprawdzone na komputerze i w emulacji; pozostałe moduły i test na prawdziwym telefonie jeszcze przed zespołem
-- [x] Obecna aplikacja **uruchamia się w kontenerach Docker** (backend, baza danych, frontend, Mailpit); migracje V1/V2 i przepływy kont sprawdzone
+- [x] Obecna aplikacja **uruchamia się w kontenerach Docker** (backend, baza danych, frontend, Mailpit); migracje V1–V4 oraz przepływy kont i planów sprawdzone
 - [ ] **Cotygodniowe podsumowanie postępów** w zespole, z odniesieniem do listy zadań
 
 ---
@@ -332,13 +339,13 @@ Zadanie uznajemy za skończone, gdy:
 | Moduł | Osoba | Status |
 |---|---|---|
 | M0 Infrastruktura / Docker | | 🟡 infrastruktura działa; konwencja Git/PR i review do uzgodnienia |
-| M1 Konta i autoryzacja | | 🟡 przepływy kont gotowe; nadawanie roli trenera i testy uprawnień do uzupełnienia |
-| M2 Plany treningowe | | ☐ do wykonania w Sprincie 2 |
+| M1 Konta i autoryzacja | | ✅ przepływy kont, operatorowe nadawanie roli trenera i testy obecnych uprawnień gotowe; nowe endpointy wymagają zabezpieczenia podczas implementacji |
+| M2 Plany treningowe | | ✅ model, katalog, API, listy, kreator, edycja i usuwanie gotowe; pełny przepływ UI sprawdzony w Dockerze |
 | M3 Progres | | ☐ do wykonania |
 | M4 Moduł trenera | | ☐ do wykonania |
 | M5 Udostępnianie i ocena planów | | ☐ do wykonania |
 | M6 Moduły dodatkowe | | ☐ do wykonania |
-| Frontend (UI/UX, mobile) | | 🟡 ekrany kont i ochrona profilu gotowe; widoki treningowe do wykonania |
+| Frontend (UI/UX, mobile) | | 🟡 konta i cały zakres UI planów S2 gotowe; kolejne moduły do wykonania; widoki sprawdzone w desktopie i emulowanym układzie mobilnym, rzeczywisty telefon pozostaje do sprawdzenia |
 
 ---
 

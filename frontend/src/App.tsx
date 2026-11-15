@@ -10,6 +10,11 @@ import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage'
 import { ConfirmationPage } from '@/pages/ConfirmationPage'
 import { ProfilePage } from '@/pages/ProfilePage'
+import { ExercisesPage } from '@/pages/ExercisesPage'
+import { PlansPage } from '@/pages/PlansPage'
+import { PlanDetailsPage } from '@/pages/PlanDetailsPage'
+import { PlanCreatePage } from '@/pages/PlanCreatePage'
+import { PlanEditPage } from '@/pages/PlanEditPage'
 
 export default function App() {
   return (
@@ -19,6 +24,11 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/profil" element={<ProfilePage />} />
+            <Route path="/cwiczenia" element={<ExercisesPage />} />
+            <Route path="/plany" element={<PlansPage />} />
+            <Route path="/plany/nowy" element={<PlanCreatePage />} />
+            <Route path="/plany/:id/edytuj" element={<PlanEditPage />} />
+            <Route path="/plany/:id" element={<PlanDetailsPage />} />
           </Route>
           <Route element={<GuestRoute />}>
             <Route path="/logowanie" element={<LoginPage />} />

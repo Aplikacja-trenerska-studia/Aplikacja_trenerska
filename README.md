@@ -21,6 +21,19 @@ docker compose up --build
 
 Po rejestracji otwórz wiadomość w Mailpit i potwierdź konto, zanim się zalogujesz. Linki w wiadomościach z konfiguracji Docker prowadzą na port 3000.
 
+### Domyślne konto do lokalnych testów
+
+Lokalny Compose domyślnie uruchamia profile `docker,dev` i tworzy aktywne konto:
+
+- E-mail: **`dev@example.test`**
+- Hasło: **`devdevdev`**
+
+Nie wymaga rejestracji ani potwierdzenia wiadomości. Zapisane plany pozostają w bazie. Kolejny start nie zmienia istniejącego konta, hasła, roli ani danych; po usunięciu konta zostanie ono utworzone przy następnym starcie z profilem `dev`. Przy lokalnym uruchomieniu Maven można włączyć je przez `-Dspring-boot.run.profiles=dev`.
+
+Tworzenie tego konta działa wyłącznie w profilu `dev`. Poza lokalnymi testami ustaw `SPRING_PROFILES_ACTIVE=docker` (bez `dev`); wyłączenie profilu nie usuwa konta już zapisanego w dotychczasowej bazie.
+
+Po zalogowaniu dostępne są zakładki **Ćwiczenia** (`/cwiczenia`) i **Moje plany** (`/plany`). Katalog obsługuje filtry nazwy, partii i typu. Przycisk **Nowy plan** otwiera kreator dni i ćwiczeń z seriami, powtórzeniami i ciężarem. W szczegółach można edytować lub usunąć plan po potwierdzeniu; strzałki w formularzu zmieniają kolejność dni i ćwiczeń.
+
 ## Uruchomienie lokalne (dev)
 
 1. Baza i poczta: `docker compose up db mailpit` albo lokalny PostgreSQL i serwer SMTP.
@@ -61,6 +74,8 @@ Opis API i scenariusze sprawdzenia aktywacji, resetu hasła i usuwania konta: [K
 
 Nadawanie i odbieranie roli trenera: [Role USER / TRAINER](docs/ACCOUNTS.md#role-user--trainer). Test skryptu operatora na jednorazowej bazie PostgreSQL: `pwsh -NoProfile -File tests/smoke-roles.ps1` (wymaga Dockera).
 
+Schemat ćwiczeń i planów (V3), katalog 48 ćwiczeń (V4), kaskady usuwania i model JPA: [WORKOUT_MODEL.md](docs/WORKOUT_MODEL.md). Pełne testy backendu na jednorazowym PostgreSQL 16 oraz sprawdzenie aktualizacji V2 → V3 → V4: `pwsh -NoProfile -File tests/test-workout-postgres.ps1` (wymaga Dockera, używa JDK 21 w kontenerze). Katalog dodaje się automatycznie przy starcie backendu przez Flyway.
+
 Test pełnego stacku Docker (z katalogu głównego repozytorium):
 
 ```powershell
@@ -78,3 +93,7 @@ Wrapper `backend/mvnw` musi mieć końce linii LF, zgodnie z `.gitattributes`, a
 - [SPRINTY.md](docs/SPRINTY.md) — harmonogram  
 - [BACKEND_STRUCTURE.md](docs/BACKEND_STRUCTURE.md) — układ pakietów  
 - [ACCOUNTS.md](docs/ACCOUNTS.md) — konta, ochrona sesji, API i obsługa wiadomości
+- [WORKOUT_MODEL.md](docs/WORKOUT_MODEL.md) — model ćwiczeń i planów, kolejność, integralność i testy
+- [EXERCISES_API.md](docs/EXERCISES_API.md) — odczyt katalogu ćwiczeń z filtrami, format odpowiedzi i autoryzacja
+- [WORKOUT_PLANS_API.md](docs/WORKOUT_PLANS_API.md) — CRUD własnych planów, dni i ćwiczeń, walidacja i testy uprawnień
+- [WORKOUT_FRONTEND.md](docs/WORKOUT_FRONTEND.md) — listy, kreator, edycja i usuwanie planów, walidacja i pełny test przeglądarkowy

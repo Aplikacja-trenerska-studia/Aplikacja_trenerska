@@ -29,7 +29,7 @@ export function ProtectedRoute() {
   }, [loggedIn, token, attempt])
 
   if (!loggedIn) {
-    return <Navigate to="/logowanie" state={{ from: location.pathname }} replace />
+    return <Navigate to="/logowanie" state={{ from: location.pathname + location.search }} replace />
   }
   if (!verified || verified.token !== token) {
     return <div className="rounded-xl border bg-card p-6 text-center" aria-live="polite">

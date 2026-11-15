@@ -4,6 +4,12 @@ Moduł `auth` obsługuje rejestrację, potwierdzenie e-maila, logowanie, odzyska
 
 ## Przepływy
 
+### Lokalne konto deweloperskie
+
+Profil `dev` tworzy przy starcie aktywne konto `dev@example.test` z hasłem `devdevdev`, nazwą `Dev` i rolą `USER`. Hasło jest zapisywane przez istniejący encoder BCrypt. Lokalny Compose domyślnie włącza `docker,dev`, a samo konto nie wymaga Mailpit ani aktywacji. Pozostałe rejestracje nadal wymagają potwierdzenia adresu.
+
+Jeżeli konto o tym adresie już istnieje (niezależnie od wielkości liter), inicjalizator niczego nie zmienia: nie resetuje hasła, nie aktywuje konta i nie zmienia jego roli ani wersji sesji. Usunięte konto zostanie odtworzone przy kolejnym starcie z profilem `dev`. Profil bez `dev` nie uruchamia inicjalizatora i nie usuwa wcześniej zapisanych danych. Dla uruchomienia bez konta domyślnego ustaw `SPRING_PROFILES_ACTIVE=docker`; dla Maven lokalnie profil można włączyć przez `-Dspring-boot.run.profiles=dev`.
+
 ### Rejestracja i potwierdzenie e-maila
 
 1. Użytkownik rejestruje konto na `/rejestracja`.
@@ -27,7 +33,7 @@ Konta utworzone przed dodaniem potwierdzenia pozostają aktywne. Potwierdzenie d
 1. Zalogowany użytkownik otwiera profil i podaje obecne hasło w sekcji usuwania konta.
 2. `POST /api/users/me/deletion-request` weryfikuje hasło i wysyła wiadomość na adres przypisany do konta. Samo żądanie nie usuwa konta.
 3. Link `/confirm-deletion?token=…` wyświetla opis skutków operacji i wymaga naciśnięcia przycisku potwierdzenia.
-4. `POST /api/auth/confirm-deletion` usuwa konto i powiązane tokeny. Istniejące sesje przestają działać.
+4. `POST /api/auth/confirm-deletion` usuwa konto, powiązane tokeny oraz własne plany, ich dni i wpisy ćwiczeń. Istniejące sesje przestają działać. Katalog ćwiczeń i cudze plany pozostają; autorstwo ćwiczeń usuwanego konta jest czyszczone.
 
 Potwierdzenie z e-maila jest dostępne także w innej przeglądarce, bez aktywnej sesji. Otwarcie linku metodą GET nie zmienia danych; podgląd wiadomości przez klienta pocztowego nie może sam usunąć konta.
 
@@ -93,4 +99,4 @@ Hasło podczas rejestracji i resetu musi mieć co najmniej 8 znaków oraz maksym
 6. Sprawdź, że samo otwarcie strony niczego nie usuwa. Dopiero przycisk potwierdzenia usuwa konto.
 7. Sprawdź odmowę ponownego użycia tokenu, tokenu zmienionego lub wygasłego oraz przekierowanie niezalogowanego użytkownika z profilu na logowanie.
 
-Obecny model danych zawiera konta i tokeny. Przy dodawaniu planów, pomiarów i relacji trenerskich trzeba rozszerzyć usuwanie konta o te dane i dodać testy integralności; ich docelowy model z `PLAN.md` nie jest jeszcze zaimplementowany.
+Obecny model danych zawiera konta, tokeny oraz ćwiczenia i strukturę planów (V3, S2-05). Usuwanie konta obejmuje jego plany przez kaskady kluczy obcych i jest sprawdzane testem zachowania cudzego planu korzystającego ze wspólnego ćwiczenia. Szczegóły: [WORKOUT_MODEL.md](WORKOUT_MODEL.md). Przy dodawaniu pomiarów i relacji trenerskich trzeba rozszerzyć reguły usuwania oraz testy integralności o nowe dane.
