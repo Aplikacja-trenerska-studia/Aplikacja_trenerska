@@ -15,6 +15,8 @@ Vercel Container Runtime jest obecnie w becie. Ustawienia hostingu opisuje [doku
 
 Backend używa transaction poolera na porcie `6543`; migracje Flyway korzystają z session poolera na `5432`. Ustawienie `prepareThreshold=0` w JDBC wyłącza przygotowane instrukcje nieobsługiwane przez współdzielony transaction pooler. SSL musi pozostać włączony. [Połączenia i ograniczenia Supabase](https://supabase.com/docs/guides/database/connecting-to-postgres).
 
+`backend/vercel.json` wybiera region `dub1` (Dublin / `eu-west-1`), zgodny z regionem bazy użytej w tym wdrożeniu. Utrzymywanie backendu blisko bazy ogranicza opóźnienia podczas migracji i startu Hibernate. Przy bazie w innym regionie dostosuj to ustawienie. [Regiony Vercela](https://vercel.com/docs/regions).
+
 ## 2. Zarezerwuj projekty i adresy Vercel
 
 Utwórz dwa projekty połączone z repozytorium GitHub. Ich stabilne domeny produkcyjne będą potrzebne w zmiennych środowiskowych, przykładowo:
@@ -37,7 +39,18 @@ Wartości poniżej są przykładami — użyj własnych adresów. Jeżeli najpie
 
 Do pierwszego wdrożenia tej gałęzi wybierz `feat/deployment` po jej wypchnięciu; po scaleniu można ustawić `main`. Sam push brancha nie zmienia automatycznie ustawienia Production Branch w istniejących projektach.
 
-Jeśli import początkowo użył `main`, w utworzonym projekcie przejdź do **Settings → Environments → Production → Branch Tracking**, wpisz `feat/deployment` i zapisz. Następnie wybierz **Deployments → Create Deployment** i podaj `feat/deployment` jako źródło. Ponowne wdrożenie starego commita z `main` nie pobierze konfiguracji z innego brancha. [Wybór brancha i ręczne wdrożenia Vercela](https://vercel.com/docs/git).
+Jeśli import początkowo użył `main`, docelowy branch ustawisz w **Settings → Environments → Production → Branch Tracking**. Jeśli panel zgłasza „No deployments found”, najpierw uzupełnij poniższe zmienne Production i wykonaj pierwsze wdrożenie z lokalnego brancha `feat/deployment` przez CLI. Następnie ponów ustawienie Branch Tracking. Ponowne wdrożenie starego commita z `main` nie pobierze konfiguracji z innego brancha. [Wybór brancha i ręczne wdrożenia Vercela](https://vercel.com/docs/git).
+
+Przy wdrażaniu przez Vercel CLI uruchamiaj polecenia z katalogu głównego repozytorium i wybieraj istniejący projekt przez `--project`. Ustawienia projektu zachowują właściwy Root Directory (`backend` albo `frontend`). Repozytorium zawiera `.vercelignore`, który wyklucza lokalne pliki `.env*`, zależności, wyniki kompilacji i logi z wysyłanego źródła; same reguły `.gitignore` nie zastępują tej konfiguracji. Przed pierwszym wysłaniem sprawdź listę plików poleceniem `vercel deploy --project <NAZWA_PROJEKTU> --prod --dry --json`. Manifest powinien zawierać kod, migracje i konfigurację budowania, a w backendzie także `Dockerfile`, `.dockerignore`, `pom.xml`, `mvnw` oraz `.mvn/wrapper/maven-wrapper.properties`. Nie powinien zawierać rzeczywistych plików środowiska ani katalogów `target`, `dist` i `node_modules`. [Wykluczenia plików Vercel](https://vercel.com/docs/deployments/vercel-ignore), [podgląd manifestu przed wdrożeniem](https://vercel.com/changelog/dry-run-deployments-with-vercel-cli).
+
+Po zalogowaniu przez `vercel login`, sprawdzeniu aktywnego lokalnego brancha oraz uzupełnieniu zmiennych obu projektów wykonaj z katalogu głównego repozytorium (podstaw własne nazwy istniejących projektów):
+
+```powershell
+vercel deploy --project aplikacja-trenerska-api --prod --meta githubDeployment=1 --meta githubCommitRef=feat/deployment
+vercel deploy --project aplikacja-trenerska --prod --meta githubDeployment=1 --meta githubCommitRef=feat/deployment
+```
+
+CLI wysyła bieżące pliki lokalne; parametr `githubCommitRef` opisuje branch i nie przełącza kodu. Opcja `--prod` używa zmiennych Production, również gdy branch nie jest jeszcze przypięty w panelu. Jeżeli konto ma kilka zespołów, wskaż właściwy przez `--scope <SLUG_ZESPOLU>`. [Wdrożenia produkcyjne i powiązanie z Git](https://vercel.com/docs/cli/deploy).
 
 ## 3. Ustaw backend w Vercel
 
