@@ -27,10 +27,15 @@ public class SecurityConfig {
 
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 	private final AppUserDetailsService userDetailsService;
+	private final AccountProperties accountProperties;
+	private final CorsProperties corsProperties;
 
-	public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, AppUserDetailsService userDetailsService) {
+	public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, AppUserDetailsService userDetailsService,
+			AccountProperties accountProperties, CorsProperties corsProperties) {
 		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
 		this.userDetailsService = userDetailsService;
+		this.accountProperties = accountProperties;
+		this.corsProperties = corsProperties;
 	}
 
 	@Bean
@@ -68,8 +73,10 @@ public class SecurityConfig {
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOriginPatterns(
-				java.util.List.of("http://localhost:*", "http://127.0.0.1:*"));
+		var origins = new java.util.LinkedHashSet<>(corsProperties.allowedOrigins());
+		origins.add(CorsProperties.normalizeOrigin(accountProperties.frontendUrl()));
+		configuration.setAllowedOrigins(java.util.List.copyOf(origins));
+		configuration.setAllowedOriginPatterns(corsProperties.allowedOriginPatterns());
 		configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(java.util.List.of("*"));
 		configuration.setAllowCredentials(true);

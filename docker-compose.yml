@@ -36,6 +36,7 @@ services:
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
       SMTP_AUTH: ${SMTP_AUTH:-false}
       SMTP_STARTTLS_ENABLE: ${SMTP_STARTTLS_ENABLE:-false}
+      SMTP_SSL_ENABLE: ${SMTP_SSL_ENABLE:-false}
     ports:
       - "8080:8080"
 

@@ -1,5 +1,6 @@
 import { clearSession, getAccessToken } from '@/lib/auth-storage'
 import type { ApiError } from '@/types/auth'
+import { resolveApiUrl } from '@/lib/api-url'
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}, authenticated = true): Promise<T> {
   const headers = new Headers(init.headers)
@@ -14,7 +15,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}, authenti
 
   let response: Response
   try {
-    response = await fetch(path, { ...init, headers })
+    response = await fetch(resolveApiUrl(path, import.meta.env.VITE_API_URL), { ...init, headers })
   } catch {
     throw { message: 'Nie można połączyć się z serwerem. Sprawdź połączenie i spróbuj ponownie.' } satisfies ApiError
   }
