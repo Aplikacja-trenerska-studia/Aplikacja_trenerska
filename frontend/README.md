@@ -40,3 +40,28 @@ JWT i dane sesji są przechowywane w `localStorage`. Guard sprawdza lokalny term
 Backend weryfikuje podpis JWT i uprawnienia; guard jest wyłącznie warstwą interfejsu. Publiczne operacje uwierzytelniania nie wysyłają starego JWT. Polityka `no-referrer` chroni linki z tokenami przed przekazaniem w nagłówku Referer.
 
 W Dockerze Nginx przekazuje `/api` do kontenera backendu i zapewnia obsługę bezpośredniego wejścia na trasy SPA.
+
+## Wdrożenie frontendu na Vercel
+
+Frontend i backend są osobnymi projektami Vercel. W projekcie frontendu ustaw Root Directory na `frontend`, preset `Vite`, Node.js 22.x, instalację `npm ci`, build `npm run build` i Output Directory `dist`. Plik `vercel.json` zawiera fallback SPA i nagłówek `Referrer-Policy: no-referrer`.
+
+Przed zbudowaniem dodaj w panelu frontendu publiczną zmienną:
+
+```dotenv
+VITE_API_URL=https://twoj-backend.vercel.app
+```
+
+Wpisz sam origin backendu, bez `/api`, ścieżki, parametrów i ukośnika na końcu. Frontend wywołuje API bezpośrednio pod tym adresem i zachowuje nagłówek JWT `Authorization`. Backend musi dopuścić dokładny origin frontendu w CORS. Ta konfiguracja nie używa zewnętrznego rewrite `/api` ani proxy Vite/Nginx. Nie wymaga ręcznego wpisywania domeny backendu do `vercel.json`.
+
+`VITE_API_URL` jest wbudowywany w publiczny JavaScript. Nie umieszczaj w nim hasła bazy, tokenów ani kluczy Supabase. Zmiana tej zmiennej wymaga ponownego deploymentu frontendu. Na Vercel brak adresu lub adres inny niż HTTPS przerywa build z komunikatem konfiguracyjnym; chroni to przed przypadkowym kierowaniem API do statycznego frontendu. Poza Vercel pusta wartość zachowuje dotychczasowe lokalne `/api`.
+
+Przykład lokalnego sprawdzenia konfiguracji produkcyjnej w PowerShell:
+
+```powershell
+$env:VERCEL = '1'
+$env:VITE_API_URL = 'https://twoj-backend.vercel.app'
+npm run build
+Remove-Item Env:VERCEL, Env:VITE_API_URL
+```
+
+Pełna kolejność wdrożenia i zmienne backendu/Supabase: [instrukcja wdrożenia](../docs/DEPLOYMENT.md).

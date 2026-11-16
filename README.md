@@ -87,6 +87,12 @@ Poczekaj, aż `http://localhost:3000/api/health` zwróci `UP`. Skrypt sprawdza A
 
 Wrapper `backend/mvnw` musi mieć końce linii LF, zgodnie z `.gitattributes`, aby działał w kontenerze Linux.
 
+## Wdrożenie na Vercel i Supabase
+
+Frontend Vite i backend Java uruchamiają się jako dwa osobne projekty Vercel; backend używa Container Runtime, a Supabase przechowuje PostgreSQL. Profil backendu `prod` oddziela ustawienia wdrożenia od lokalnych profili `docker,dev`. Frontend na Vercel wymaga publicznego adresu backendu w `VITE_API_URL`; lokalny pusty adres zachowuje proxy `/api`.
+
+Dokładna kolejność, zmienne środowiskowe, konfiguracja SMTP, migracji, CORS i ustawienia paneli: [DEPLOYMENT.md](docs/DEPLOYMENT.md). Pliki konfiguracyjne nie publikują aplikacji automatycznie — po uzupełnieniu paneli potrzebne jest wdrożenie.
+
 ## Dokumentacja
 
 - [PLAN.md](docs/PLAN.md) — zakres projektu  
@@ -97,3 +103,4 @@ Wrapper `backend/mvnw` musi mieć końce linii LF, zgodnie z `.gitattributes`, a
 - [EXERCISES_API.md](docs/EXERCISES_API.md) — odczyt katalogu ćwiczeń z filtrami, format odpowiedzi i autoryzacja
 - [WORKOUT_PLANS_API.md](docs/WORKOUT_PLANS_API.md) — CRUD własnych planów, dni i ćwiczeń, walidacja i testy uprawnień
 - [WORKOUT_FRONTEND.md](docs/WORKOUT_FRONTEND.md) — listy, kreator, edycja i usuwanie planów, walidacja i pełny test przeglądarkowy
+- [DEPLOYMENT.md](docs/DEPLOYMENT.md) — Vercel, Supabase, SMTP, zmienne środowiskowe i sprawdzenie wdrożenia
