@@ -65,3 +65,5 @@ Remove-Item Env:VERCEL, Env:VITE_API_URL
 ```
 
 Pełna kolejność wdrożenia i zmienne backendu/Supabase: [instrukcja wdrożenia](../docs/DEPLOYMENT.md).
+
+Do prezentacji bez wysyłania prawdziwych wiadomości ustaw w backendzie `APP_MAIL_MODE=log`, a we frontendzie `VITE_MAIL_MODE=log` i zbuduj go ponownie. Interfejs pokaże informację o trybie demonstracyjnym i poprosi o link od prowadzącego prezentację. Prowadzący kopiuje link z prywatnych logów backendu; przeglądarka nie otrzymuje tokenów z dodatkowego API. Rejestracja nadal wymaga aktywacji, a reset hasła i usunięcie konta nadal korzystają z jednorazowych linków. Domyślnie `VITE_MAIL_MODE=smtp` zachowuje teksty dotyczące wysyłki e-maili. Ta publiczna flaga zmienia tylko komunikaty interfejsu — sposób dostarczenia linków wybiera backend.

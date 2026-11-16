@@ -4,6 +4,7 @@ import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
@@ -13,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.studia.aplikacja_trenerska.auth.entity.VerificationTokenType;
 import com.studia.aplikacja_trenerska.config.AccountProperties;
+import com.studia.aplikacja_trenerska.config.MailDeliveryProperties;
 
 @Service
 public class AccountMailService {
@@ -21,10 +23,24 @@ public class AccountMailService {
 
     private final JavaMailSender mailSender;
     private final AccountProperties properties;
+    private final MailDeliveryProperties delivery;
 
-    public AccountMailService(JavaMailSender mailSender, AccountProperties properties) {
-        this.mailSender = mailSender;
+    public AccountMailService(ObjectProvider<JavaMailSender> mailSenderProvider, AccountProperties properties,
+            MailDeliveryProperties delivery) {
         this.properties = properties;
+        this.delivery = delivery;
+        if (delivery.mode() == MailDeliveryProperties.Mode.SMTP) {
+            if (properties.mailFrom() == null || properties.mailFrom().isBlank()) {
+                throw new IllegalArgumentException("app.account.mail-from is required in SMTP mode");
+            }
+            this.mailSender = mailSenderProvider.getIfAvailable();
+            if (mailSender == null) {
+                throw new IllegalStateException("SMTP mode requires a configured JavaMailSender");
+            }
+        } else {
+            this.mailSender = null;
+            log.warn("Demo mail mode enabled: account links are written to backend logs; emails are not sent");
+        }
     }
 
     public void send(String email, String token, VerificationTokenType type, Duration ttl) {
@@ -33,6 +49,11 @@ public class AccountMailService {
             case PASSWORD_RESET -> "/reset-password";
             case ACCOUNT_DELETION -> "/confirm-deletion";
         };
+        String url = properties.frontendUrl().replaceAll("/+$", "") + path + "?token=" + token;
+        if (delivery.mode() == MailDeliveryProperties.Mode.LOG) {
+            log.info("[DEMO MAIL] {} {}", type, url);
+            return;
+        }
         String subject = switch (type) {
             case EMAIL_CONFIRMATION -> "Potwierdź konto w aplikacji trenerskiej";
             case PASSWORD_RESET -> "Zresetuj hasło w aplikacji trenerskiej";
@@ -44,7 +65,6 @@ public class AccountMailService {
             case ACCOUNT_DELETION -> "Otrzymaliśmy prośbę o trwałe usunięcie Twojego konta. "
                     + "Operacja jest nieodwracalna. Konto zostanie usunięte dopiero po potwierdzeniu na stronie.";
         };
-        String url = properties.frontendUrl().replaceAll("/+$", "") + path + "?token=" + token;
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(properties.mailFrom());
         message.setTo(email);

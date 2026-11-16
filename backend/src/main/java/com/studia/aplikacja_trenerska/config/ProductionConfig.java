@@ -11,7 +11,8 @@ import org.springframework.core.env.Environment;
 @Profile("prod")
 public class ProductionConfig {
 
-    public ProductionConfig(Environment environment, JwtProperties jwt, AccountProperties account, CorsProperties cors) {
+    public ProductionConfig(Environment environment, JwtProperties jwt, AccountProperties account, CorsProperties cors,
+            MailDeliveryProperties mail) {
         if (Arrays.stream(environment.getActiveProfiles()).anyMatch(profile -> profile.equals("dev") || profile.equals("docker"))) {
             throw new IllegalArgumentException("The prod profile must not be combined with dev or docker");
         }
@@ -27,10 +28,19 @@ public class ProductionConfig {
         }
         for (String property : new String[] {
                 "spring.datasource.url", "spring.datasource.username", "spring.datasource.password",
-                "spring.flyway.url", "spring.flyway.user", "spring.flyway.password",
-                "spring.mail.host", "spring.mail.username", "spring.mail.password"}) {
+                "spring.flyway.url", "spring.flyway.user", "spring.flyway.password"}) {
             if (environment.getProperty(property, "").isBlank()) {
                 throw new IllegalArgumentException("Missing production setting: " + property);
+            }
+        }
+        if (mail.mode() == MailDeliveryProperties.Mode.SMTP) {
+            for (String property : new String[] {"spring.mail.host", "spring.mail.username", "spring.mail.password"}) {
+                if (environment.getProperty(property, "").isBlank()) {
+                    throw new IllegalArgumentException("Missing production setting: " + property);
+                }
+            }
+            if (account.mailFrom() == null || account.mailFrom().isBlank()) {
+                throw new IllegalArgumentException("Missing production setting: APP_MAIL_FROM");
             }
         }
     }

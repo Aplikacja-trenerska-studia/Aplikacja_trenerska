@@ -19,9 +19,6 @@ public record AccountProperties(
                 || origin.getRawQuery() != null || origin.getRawFragment() != null || origin.getUserInfo() != null) {
             throw new IllegalArgumentException("app.account.frontend-url must be an absolute HTTP(S) URL");
         }
-        if (mailFrom == null || mailFrom.isBlank()) {
-            throw new IllegalArgumentException("app.account.mail-from is required");
-        }
         for (Duration ttl : new Duration[] {emailConfirmationTtl, passwordResetTtl, accountDeletionTtl}) {
             if (ttl == null || ttl.isNegative() || ttl.isZero()) {
                 throw new IllegalArgumentException("Account token lifetimes must be positive");

@@ -16,6 +16,7 @@ import org.springframework.mock.env.MockEnvironment;
 import com.studia.aplikacja_trenerska.config.AccountProperties;
 import com.studia.aplikacja_trenerska.config.CorsProperties;
 import com.studia.aplikacja_trenerska.config.JwtProperties;
+import com.studia.aplikacja_trenerska.config.MailDeliveryProperties;
 import com.studia.aplikacja_trenerska.config.ProductionConfig;
 
 class ProductionConfigurationTests {
@@ -30,7 +31,7 @@ class ProductionConfigurationTests {
     @Test
     void acceptsAnExplicitProductionConfigurationWithExactHttpsOrigins() {
         assertThatCode(() -> new ProductionConfig(environment(), jwt(SECRET), account(FRONTEND),
-                cors(List.of("https://trainer-preview.vercel.app"))))
+                cors(List.of("https://trainer-preview.vercel.app")), smtp()))
                 .doesNotThrowAnyException();
     }
 
@@ -50,28 +51,28 @@ class ProductionConfigurationTests {
             "REPLACE_WITH_A_NEW_RANDOM_SECRET_AT_LEAST_32_BYTES"})
     void productionRequiresANonDevelopmentSigningSecret(String secret) {
         assertThatIllegalArgumentException().isThrownBy(() -> new ProductionConfig(environment(), jwt(secret),
-                account(FRONTEND), cors(List.of())))
+                account(FRONTEND), cors(List.of()), smtp()))
                 .withMessageContaining("APP_JWT_SECRET");
     }
 
     @Test
     void productionRequiresHttpsForItsPrimaryFrontend() {
         assertThatIllegalArgumentException().isThrownBy(() -> new ProductionConfig(environment(), jwt(SECRET),
-                account("http://trainer-example.vercel.app"), cors(List.of())))
+                account("http://trainer-example.vercel.app"), cors(List.of()), smtp()))
                 .withMessageContaining("HTTPS");
     }
 
     @Test
     void productionRequiresHttpsForAdditionalAllowedOrigins() {
         assertThatIllegalArgumentException().isThrownBy(() -> new ProductionConfig(environment(), jwt(SECRET),
-                account(FRONTEND), cors(List.of("http://preview.example.test"))))
+                account(FRONTEND), cors(List.of("http://preview.example.test")), smtp()))
                 .withMessageContaining("HTTPS");
     }
 
     @Test
     void productionCannotAllowOriginPatternsEvenForLocalhost() {
         assertThatIllegalArgumentException().isThrownBy(() -> new ProductionConfig(environment(), jwt(SECRET),
-                account(FRONTEND), new CorsProperties(List.of(), List.of("http://localhost:*"))))
+                account(FRONTEND), new CorsProperties(List.of(), List.of("http://localhost:*")), smtp()))
                 .withMessageContaining("HTTPS");
     }
 
@@ -94,6 +95,30 @@ class ProductionConfigurationTests {
     }
 
     @Test
+    void smtpRequiresAnExplicitSenderAddress() {
+        var noSender = new AccountProperties(FRONTEND, "", Duration.ofHours(24),
+                Duration.ofMinutes(30), Duration.ofMinutes(30));
+        assertThatIllegalArgumentException().isThrownBy(() -> new ProductionConfig(environment(), jwt(SECRET),
+                noSender, cors(List.of()), smtp())).withMessageContaining("APP_MAIL_FROM");
+    }
+
+    @Test
+    void logModeDoesNotRequireSmtpOrSenderButStillRequiresDatabaseSettings() {
+        MockEnvironment environment = environment();
+        for (String property : new String[] {"spring.mail.host", "spring.mail.username", "spring.mail.password"}) {
+            environment.setProperty(property, "");
+        }
+        var noSender = new AccountProperties(FRONTEND, null, Duration.ofHours(24),
+                Duration.ofMinutes(30), Duration.ofMinutes(30));
+        var log = new MailDeliveryProperties(MailDeliveryProperties.Mode.LOG);
+        assertThatCode(() -> new ProductionConfig(environment, jwt(SECRET), noSender, cors(List.of()), log))
+                .doesNotThrowAnyException();
+        environment.setProperty("spring.datasource.password", "");
+        assertThatIllegalArgumentException().isThrownBy(() -> new ProductionConfig(environment, jwt(SECRET),
+                noSender, cors(List.of()), log)).withMessageContaining("spring.datasource.password");
+    }
+
+    @Test
     void originsAreNormalizedWithoutBroadeningTheAllowlist() {
         CorsProperties properties = cors(List.of(" https://trainer-example.vercel.app/ ", ""));
         assertThat(properties.allowedOrigins()).containsExactly(FRONTEND);
@@ -110,7 +135,7 @@ class ProductionConfigurationTests {
     }
 
     private ProductionConfig create(MockEnvironment environment) {
-        return new ProductionConfig(environment, jwt(SECRET), account(FRONTEND), cors(List.of()));
+        return new ProductionConfig(environment, jwt(SECRET), account(FRONTEND), cors(List.of()), smtp());
     }
 
     private MockEnvironment environment() {
@@ -131,5 +156,9 @@ class ProductionConfigurationTests {
 
     private CorsProperties cors(List<String> origins) {
         return new CorsProperties(origins, List.of());
+    }
+
+    private MailDeliveryProperties smtp() {
+        return new MailDeliveryProperties(MailDeliveryProperties.Mode.SMTP);
     }
 }

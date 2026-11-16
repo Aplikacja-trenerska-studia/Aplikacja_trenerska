@@ -47,6 +47,7 @@ Lokalny frontend działa na http://localhost:5173, a Mailpit na http://localhost
 | Zmienna środowiskowa | Domyślna wartość lokalna | Zastosowanie |
 |---|---|---|
 | `APP_FRONTEND_URL` | `http://localhost:5173` | Adres aplikacji używany w linkach e-mail; w Compose `http://localhost:3000` |
+| `APP_MAIL_MODE` | `smtp` | `smtp` wysyła wiadomości; `log` zapisuje linki w prywatnych logach backendu na potrzeby demonstracji |
 | `APP_MAIL_FROM` | `no-reply@aplikacja.local` | Nadawca wiadomości |
 | `SPRING_MAIL_HOST` | `localhost` | Host SMTP; w Compose `mailpit` |
 | `SPRING_MAIL_PORT` | `1025` | Port SMTP |
@@ -57,7 +58,7 @@ Lokalny frontend działa na http://localhost:5173, a Mailpit na http://localhost
 | `APP_ACCOUNT_PASSWORD_RESET_TTL` | `30m` | Ważność linku resetu hasła |
 | `APP_ACCOUNT_ACCOUNT_DELETION_TTL` | `30m` | Ważność linku usunięcia konta |
 
-Konfiguracja lokalna z Mailpit nie dostarcza wiadomości do rzeczywistych skrzynek. Dla wdrożenia ustaw produkcyjny SMTP, adres frontendu z HTTPS i własny sekret JWT (`APP_JWT_SECRET`). Przy pracy lokalnej na innym porcie lub przez zewnętrzny adres zmień `APP_FRONTEND_URL`.
+Konfiguracja lokalna z Mailpit nie dostarcza wiadomości do rzeczywistych skrzynek. Dla wdrożenia ustaw adres frontendu z HTTPS i własny sekret JWT (`APP_JWT_SECRET`). Wysyłkę zapewnia produkcyjny SMTP albo demonstracyjny wariant `APP_MAIL_MODE=log` opisany poniżej. Przy pracy lokalnej na innym porcie lub przez zewnętrzny adres zmień `APP_FRONTEND_URL`.
 
 ## Weryfikacja zmian
 
@@ -90,6 +91,8 @@ Wrapper `backend/mvnw` musi mieć końce linii LF, zgodnie z `.gitattributes`, a
 ## Wdrożenie na Vercel i Supabase
 
 Frontend Vite i backend Java uruchamiają się jako dwa osobne projekty Vercel; backend używa Container Runtime, a Supabase przechowuje PostgreSQL. Profil backendu `prod` oddziela ustawienia wdrożenia od lokalnych profili `docker,dev`. Frontend na Vercel wymaga publicznego adresu backendu w `VITE_API_URL`; lokalny pusty adres zachowuje proxy `/api`.
+
+Do pokazu studenckiego można pominąć dostawcę poczty: ustaw w backendzie `APP_MAIL_MODE=log`, a we frontendzie `VITE_MAIL_MODE=log`. Dane SMTP i `APP_MAIL_FROM` nie są wtedy wymagane. Po rejestracji, prośbie o reset hasła lub usunięcie konta odczytaj pełny link z wpisu `[DEMO MAIL]` w prywatnych **Runtime Logs** backendu i otwórz go ręcznie. Używaj fikcyjnych kont, np. `student@example.test`, i nie publikuj logów z linkami dającymi dostęp do operacji na koncie. Potwierdzenia, ważność tokenów i ochrona tras pozostają aktywne.
 
 Dokładna kolejność, zmienne środowiskowe, konfiguracja SMTP, migracji, CORS i ustawienia paneli: [DEPLOYMENT.md](docs/DEPLOYMENT.md). Pliki konfiguracyjne nie publikują aplikacji automatycznie — po uzupełnieniu paneli potrzebne jest wdrożenie.
 

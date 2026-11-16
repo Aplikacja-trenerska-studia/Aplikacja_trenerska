@@ -4,6 +4,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties({JwtProperties.class, AccountProperties.class, CorsProperties.class})
+@EnableConfigurationProperties({JwtProperties.class, AccountProperties.class, CorsProperties.class, MailDeliveryProperties.class})
 public class AppConfig {
 }

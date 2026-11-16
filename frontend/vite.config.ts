@@ -6,6 +6,9 @@ import { normalizeApiOrigin } from './src/lib/api-url.ts'
 
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, import.meta.dirname, 'VITE_')
+  if (env.VITE_MAIL_MODE && !['smtp', 'log'].includes(env.VITE_MAIL_MODE)) {
+    throw new Error('VITE_MAIL_MODE musi mieć wartość smtp albo log.')
+  }
   const isVercelBuild = command === 'build' && process.env.VERCEL === '1'
   const apiOrigin = normalizeApiOrigin(env.VITE_API_URL, isVercelBuild)
   if (isVercelBuild && !apiOrigin) {

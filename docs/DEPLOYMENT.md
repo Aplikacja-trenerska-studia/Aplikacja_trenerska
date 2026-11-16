@@ -1,6 +1,6 @@
 # Wdrożenie: Vercel i Supabase
 
-Konfiguracja zakłada dwa projekty Vercel z tego samego repozytorium: statyczny frontend React/Vite oraz backend Java 21 jako kontener. Supabase udostępnia PostgreSQL, a wiadomości wysyła zewnętrzny serwer SMTP. Aplikacja zachowuje własne konta i JWT; nie korzysta z Supabase Auth.
+Konfiguracja zakłada dwa projekty Vercel z tego samego repozytorium: statyczny frontend React/Vite oraz backend Java 21 jako kontener. Supabase udostępnia PostgreSQL. Wiadomości można wysyłać przez zewnętrzny SMTP albo zastąpić je linkami w prywatnych logach na potrzeby demonstracji studenckiej. Aplikacja zachowuje własne konta i JWT; nie korzysta z Supabase Auth.
 
 Pliki przygotowano na branchu `feat/deployment`. Samo przygotowanie ich lokalnie nie publikuje brancha ani aplikacji. Przed importem tej wersji do Vercel branch musi być wypchnięty do GitHub albo zmiany muszą zostać scalone do wybranego brancha wdrożeniowego.
 
@@ -37,6 +37,8 @@ Wartości poniżej są przykładami — użyj własnych adresów. Jeżeli najpie
 
 Do pierwszego wdrożenia tej gałęzi wybierz `feat/deployment` po jej wypchnięciu; po scaleniu można ustawić `main`. Sam push brancha nie zmienia automatycznie ustawienia Production Branch w istniejących projektach.
 
+Jeśli import początkowo użył `main`, w utworzonym projekcie przejdź do **Settings → Environments → Production → Branch Tracking**, wpisz `feat/deployment` i zapisz. Następnie wybierz **Deployments → Create Deployment** i podaj `feat/deployment` jako źródło. Ponowne wdrożenie starego commita z `main` nie pobierze konfiguracji z innego brancha. [Wybór brancha i ręczne wdrożenia Vercela](https://vercel.com/docs/git).
+
 ## 3. Ustaw backend w Vercel
 
 W **Settings → Environment Variables** projektu backendowego dodaj zmienne dla środowiska **Production**. W panelu wpisuje się wartości bez zewnętrznych cudzysłowów. Wzór ze wszystkimi ustawieniami znajduje się w [backend/.env.production.example](../backend/.env.production.example); plik jest przykładem i nie jest automatycznie importowany do panelu.
@@ -54,7 +56,8 @@ W **Settings → Environment Variables** projektu backendowego dodaj zmienne dla
 | `APP_JWT_SECRET` | własny losowy sekret, co najmniej 32 bajty; ten sam dla wszystkich instancji backendu |
 | `APP_FRONTEND_URL` | dokładny adres frontendu HTTPS, np. `https://trening-app.vercel.app` |
 | `APP_CORS_ALLOWED_ORIGINS` | opcjonalnie dodatkowe dokładne originy rozdzielone przecinkami; bez `*` i bez ścieżek |
-| `APP_MAIL_FROM` | zweryfikowany u dostawcy SMTP adres nadawcy |
+| `APP_MAIL_MODE` | `smtp` (domyślnie) albo `log` dla demonstracji bez wysyłki wiadomości |
+| `APP_MAIL_FROM` | zweryfikowany u dostawcy adres nadawcy; wymagany w trybie `smtp` |
 | `SPRING_MAIL_HOST` | host zewnętrznego SMTP |
 | `SPRING_MAIL_PORT` | port SMTP, np. `587` dla STARTTLS |
 | `SPRING_MAIL_USERNAME` | login SMTP |
@@ -64,6 +67,25 @@ W **Settings → Environment Variables** projektu backendowego dodaj zmienne dla
 | `SMTP_SSL_ENABLE` | `false` przy STARTTLS na 587; `true` dla implicit TLS na 465 |
 
 Profil `prod` ustawia domyślnie jedną konekcję Hikari na instancję, bez utrzymywania bezczynnych połączeń. Flyway i Hibernate korzystają ze schematu `training_app`; Swagger jest wyłączony. Brak wymaganych ustawień zatrzymuje uruchomienie zamiast użyć lokalnych danych. Nie łącz profilu `prod` z `dev` ani `docker`.
+
+### Demonstracja bez dostawcy poczty
+
+Na potrzeby projektu studenckiego ustaw w backendzie `APP_MAIL_MODE=log`, a we frontendzie `VITE_MAIL_MODE=log`. W tym wariancie nie trzeba zakładać skrzynki, kupować domeny ani podawać `APP_MAIL_FROM`, zmiennych `SPRING_MAIL_*` i `SMTP_*`. Pozostałe ustawienia bazy, JWT, HTTPS i `APP_FRONTEND_URL` są nadal wymagane. Pozostaw `SPRING_PROFILES_ACTIVE=prod`.
+
+1. Po wdrożeniu zarejestruj fikcyjne konto, np. `student@example.test`.
+2. W projekcie **backendu** w Vercel otwórz **Logs** i znajdź wpis `[DEMO MAIL]` dla operacji `EMAIL_CONFIRMATION`.
+3. Otwórz pełny adres z tego wpisu w przeglądarce i potwierdź konto na stronie frontendu. Następnie możesz się zalogować.
+4. Reset hasła i usunięcie konta działają tak samo: wyślij prośbę w aplikacji i otwórz nowy link z wpisu odpowiednio `PASSWORD_RESET` lub `ACCOUNT_DELETION`. Samo otwarcie strony usunięcia nie usuwa konta — operację trzeba potwierdzić.
+
+W planie Hobby logi są przechowywane przez godzinę. Najwygodniej otworzyć **Logs** i włączyć **Live** przed demonstracją. Jeśli wpis już zniknął, zamów nowy link w aplikacji (kolejna prośba jest dostępna po minucie). [Logi i limity Vercela](https://vercel.com/docs/logs/runtime).
+
+Tryb `log` zachowuje jednorazowość i ważność tokenów oraz sprawdzanie hasła przy usuwaniu konta. Nie udostępnia linków przez publiczne API. Frontend informuje, że link przekazuje administrator demonstracji. **Pełne linki dają uprawnienie do aktywacji, resetu hasła lub potwierdzenia usunięcia konta: nie publikuj logów ani ich zrzutów. Używaj wyłącznie fikcyjnych kont i danych.**
+
+Przy przejściu na rzeczywistą wysyłkę ustaw `APP_MAIL_MODE=smtp`, uzupełnij `APP_MAIL_FROM` oraz wszystkie wymagane dane SMTP, a we frontendzie ustaw `VITE_MAIL_MODE=smtp` lub usuń tę zmienną. Wykonaj ponowne wdrożenie obu projektów. Tryb `smtp` jest domyślny i nie zapisuje linków do logów.
+
+### Wysyłka przez SMTP
+
+Zmienne `APP_MAIL_FROM`, `SPRING_MAIL_*` i `SMTP_*` z tabeli dotyczą wariantu `APP_MAIL_MODE=smtp`.
 
 Dla SMTP z szyfrowaniem od początku połączenia, zwykle na porcie `465`, ustaw zamiast STARTTLS `SMTP_SSL_ENABLE=true` i `SMTP_STARTTLS_ENABLE=false`, zgodnie z wymaganiami dostawcy. Przy standardowym wariancie portu `587` pozostaw STARTTLS i uwierzytelnienie włączone.
 
@@ -87,11 +109,13 @@ W projekcie frontendowym ustaw dla **Production**:
 
 ```dotenv
 VITE_API_URL=https://<BACKEND>.vercel.app
+# Tylko dla demonstracji z backendowym APP_MAIL_MODE=log:
+VITE_MAIL_MODE=log
 ```
 
 Podaj wyłącznie origin backendu: bez końcowego `/api`, ścieżki, parametrów i fragmentu. To publiczny adres API, a nie sekret. Na Vercel wymagane jest HTTPS. Build sprawdza ustawienie i zgłasza błąd, jeżeli jest niepoprawne lub go brakuje.
 
-Zmienna jest zapisywana w paczce podczas budowania frontendu. Po zmianie `VITE_API_URL` wykonaj **Redeploy**. Nie wystarczy odświeżyć kartę przeglądarki.
+Zmienne są zapisywane w paczce podczas budowania frontendu. Po zmianie `VITE_API_URL` lub `VITE_MAIL_MODE` wykonaj **Redeploy**. Nie wystarczy odświeżyć kartę przeglądarki. `VITE_MAIL_MODE` steruje jedynie komunikatami interfejsu; sposób dostarczenia linków ustawia backendowe `APP_MAIL_MODE`.
 
 `frontend/vercel.json` zapewnia fallback SPA dla bezpośrednich wejść na `/profil`, `/plany` i strony potwierdzeń. API jest wywoływane bezpośrednio pod domeną z `VITE_API_URL`, więc nie trzeba ręcznie wpisywać domeny backendu do reguł rewrite ani ustawiać kluczy Supabase we frontendzie. Dla tego wariantu CORS backendu musi zawierać origin frontendu.
 
@@ -100,12 +124,12 @@ Lokalne Vite i Docker zachowują dotychczasowe działanie: przy pustym `VITE_API
 ## 5. Sprawdź wdrożenie
 
 - [ ] Backend uruchamia się z profilem `prod`, migracje V1–V4 przeszły i nie utworzono konta developerskiego.
-- [ ] Rejestracja dostarcza wiadomość do rzeczywistej skrzynki; link prowadzi do domeny frontendu.
+- [ ] Rejestracja dostarcza wiadomość do rzeczywistej skrzynki (`smtp`) albo zapisuje link w prywatnych logach backendu (`log`); link prowadzi do domeny frontendu.
 - [ ] Potwierdzenie konta i logowanie działają; katalog pokazuje 48 ćwiczeń.
 - [ ] Można utworzyć, odczytać, edytować i usunąć własny plan.
 - [ ] Bezpośrednie otwarcie i odświeżenie `/profil` oraz `/plany` nie zwracają 404 hostingu.
 - [ ] Reset hasła działa, a wcześniejsza sesja traci dostęp.
-- [ ] Usunięcie konta wymaga hasła i potwierdzenia z wiadomości.
+- [ ] Usunięcie konta wymaga hasła i potwierdzenia przez jednorazowy link z wiadomości lub prywatnych logów demonstracji.
 - [ ] W konsoli przeglądarki nie ma błędów CORS ani prób połączenia z `localhost`.
 
 Weryfikację wiadomości i operacji usunięcia wykonuj na własnym koncie przeznaczonym do testów. Lokalne skrypty smoke są przeznaczone do lokalnego stacku i Mailpit; nie uruchamiaj ich przeciw produkcji.
