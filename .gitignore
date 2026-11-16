@@ -5,6 +5,8 @@ frontend/dist/
 .env
 .env.*
 !.env.example
+!.env.production.example
+.vercel/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

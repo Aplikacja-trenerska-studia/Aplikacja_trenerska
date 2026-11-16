@@ -1,0 +1,23 @@
+# Vercel CLI uploads local files, including files that Git ignores.
+# Real environment files must come from the project's Vercel settings.
+**/.env
+**/.env.*
+
+# Local metadata, dependencies and generated output are rebuilt remotely.
+**/.git
+**/.vercel
+**/.tools
+**/node_modules
+**/target
+**/dist
+**/coverage
+**/.cache
+**/.idea
+**/.vscode
+**/*.log
+**/*.dump
+**/*.dumpstream
+**/*.tsbuildinfo
+
+# Keep Docker build exclusions even though Vercel CLI ignores them by default.
+!**/.dockerignore
