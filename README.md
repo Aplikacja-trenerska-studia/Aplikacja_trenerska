@@ -2,6 +2,8 @@
 
 Projekt studencki (UE Katowice). Stack: Spring Boot, PostgreSQL/TimescaleDB, React, Docker.
 
+Wersja online: **[aplikacja-trenerska.vercel.app](https://aplikacja-trenerska.vercel.app)**. Poczta działa demonstracyjnie — linki potwierdzające przekazuje administrator; wiadomości e-mail nie są wysyłane.
+
 ## Wymagania
 
 - Java 21, Maven (wrapper w `backend/`)
@@ -90,11 +92,13 @@ Wrapper `backend/mvnw` musi mieć końce linii LF, zgodnie z `.gitattributes`, a
 
 ## Wdrożenie na Vercel i Supabase
 
-Frontend Vite i backend Java uruchamiają się jako dwa osobne projekty Vercel; backend używa Container Runtime, a Supabase przechowuje PostgreSQL. Profil backendu `prod` oddziela ustawienia wdrożenia od lokalnych profili `docker,dev`. Frontend na Vercel wymaga publicznego adresu backendu w `VITE_API_URL`; lokalny pusty adres zachowuje proxy `/api`.
+Stan na 16 listopada 2026: frontend działa pod adresem podanym wyżej, a backend pod [aplikacja-trenerska-api.vercel.app](https://aplikacja-trenerska-api.vercel.app). Oba projekty Vercel wdrażają `main`. Backend Java 21 używa Container Runtime w Dublinie (`dub1`), a Supabase PostgreSQL 17 w `eu-west-1` przechowuje prywatny schemat `training_app` z migracjami V1–V4 i 48 ćwiczeniami. Przeniesiono także jedno istniejące konto `USER`; dane konta i kopie zapasowe pozostają poza repozytorium.
+
+Profil backendu `prod` oddziela ustawienia wdrożenia od lokalnych profili `docker,dev`. Frontend na Vercel wymaga publicznego adresu backendu w `VITE_API_URL`; lokalny pusty adres zachowuje proxy `/api`.
 
 Do pokazu studenckiego można pominąć dostawcę poczty: ustaw w backendzie `APP_MAIL_MODE=log`, a we frontendzie `VITE_MAIL_MODE=log`. Dane SMTP i `APP_MAIL_FROM` nie są wtedy wymagane. Po rejestracji, prośbie o reset hasła lub usunięcie konta odczytaj pełny link z wpisu `[DEMO MAIL]` w prywatnych **Runtime Logs** backendu i otwórz go ręcznie. Używaj fikcyjnych kont, np. `student@example.test`, i nie publikuj logów z linkami dającymi dostęp do operacji na koncie. Potwierdzenia, ważność tokenów i ochrona tras pozostają aktywne.
 
-Dokładna kolejność, zmienne środowiskowe, konfiguracja SMTP, migracji, CORS i ustawienia paneli: [DEPLOYMENT.md](docs/DEPLOYMENT.md). Pliki konfiguracyjne nie publikują aplikacji automatycznie — po uzupełnieniu paneli potrzebne jest wdrożenie.
+Konfiguracja i [checklista wdrożenia](docs/DEPLOYMENT.md#5-sprawdź-wdrożenie) rozróżniają wykonane sprawdzenia online od lokalnych testów pełnych przepływów konta i planów. Ręczny odbiór tych przepływów online na osobnym fikcyjnym koncie pozostaje do wykonania. Dokładne zmienne, SMTP, migracje, CORS i ustawienia paneli: [DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Dokumentacja
 

@@ -1,5 +1,21 @@
 # Wdrożenie: Vercel i Supabase
 
+## Stan wdrożenia — 16 listopada 2026
+
+Wdrożenie działa publicznie. Zadanie **S3-11** należy do **Sprintu 3 (23–29 listopada)** i zostało wykonane z wyprzedzeniem **16 listopada 2026**. Oba projekty Vercel śledzą produkcyjny branch `main`; sprawdzono wersję po scaleniu `ee2fa1e`.
+
+| Część | Działające wdrożenie |
+|---|---|
+| Frontend | [aplikacja-trenerska.vercel.app](https://aplikacja-trenerska.vercel.app), projekt `aplikacja-trenerska-frontend` |
+| Backend | [aplikacja-trenerska-api.vercel.app](https://aplikacja-trenerska-api.vercel.app), Java 21 / Container Runtime, region `dub1` |
+| Baza | Supabase PostgreSQL 17, `eu-west-1`, prywatny schemat `training_app`, migracje V1–V4 i 48 ćwiczeń |
+
+Poczta działa w trybie demonstracyjnym: backend ma `APP_MAIL_MODE=log`, a frontend `VITE_MAIL_MODE=log`. **Wiadomości nie trafiają do skrzynek e-mail.** Linki aktywacji, resetu i usunięcia konta odczytuje administrator z prywatnych logów backendu.
+
+Z lokalnej bazy przeniesiono jedno istniejące aktywne konto `USER`, zachowując wszystkie osiem pól, w tym ID, skrót hasła i wersję sesji. Katalog ćwiczeń i historia migracji w Supabase pozostały bez zmian. Kopie danych są poza Git oraz w osobnym prywatnym schemacie kopii w Supabase; repozytorium nie zawiera danych konta ani zawartości tych kopii.
+
+Zakres wykonanych sprawdzeń i pozostałe testy online zawiera [checklista wdrożenia](#5-sprawdź-wdrożenie). Poniższe sekcje opisują konfigurację i kolejne wdrożenia.
+
 Konfiguracja zakłada dwa projekty Vercel z tego samego repozytorium: statyczny frontend React/Vite oraz backend Java 21 jako kontener. Supabase udostępnia PostgreSQL. Wiadomości można wysyłać przez zewnętrzny SMTP albo zastąpić je linkami w prywatnych logach na potrzeby demonstracji studenckiej. Aplikacja zachowuje własne konta i JWT; nie korzysta z Supabase Auth.
 
 Gałęzią produkcyjną obu projektów Vercel jest `main`. Zmiany rozwijaj na osobnych branchach i scalaj do `main` przed wdrożeniem produkcyjnym. Samo przygotowanie plików lokalnie nie publikuje aplikacji.
@@ -137,16 +153,33 @@ Lokalne Vite i Docker zachowują dotychczasowe działanie: przy pustym `VITE_API
 
 ## 5. Sprawdź wdrożenie
 
-- [ ] Backend uruchamia się z profilem `prod`, migracje V1–V4 przeszły i nie utworzono konta developerskiego.
-- [ ] Rejestracja dostarcza wiadomość do rzeczywistej skrzynki (`smtp`) albo zapisuje link w prywatnych logach backendu (`log`); link prowadzi do domeny frontendu.
-- [ ] Potwierdzenie konta i logowanie działają; katalog pokazuje 48 ćwiczeń.
-- [ ] Można utworzyć, odczytać, edytować i usunąć własny plan.
-- [ ] Bezpośrednie otwarcie i odświeżenie `/profil` oraz `/plany` nie zwracają 404 hostingu.
-- [ ] Reset hasła działa, a wcześniejsza sesja traci dostęp.
-- [ ] Usunięcie konta wymaga hasła i potwierdzenia przez jednorazowy link z wiadomości lub prywatnych logów demonstracji.
-- [ ] W konsoli przeglądarki nie ma błędów CORS ani prób połączenia z `localhost`.
+- [x] Oba projekty działają pod publicznymi adresami HTTPS i wdrażają `main`.
+- [x] Backend działa z profilem `prod`; `/api/health` zwraca `UP`, migracje V1–V4 przeszły i nie utworzono konta developerskiego.
+- [x] Zapytanie logowania losowym nieistniejącym kontem zwraca `401` po odczycie bazy Supabase.
+- [x] Bez JWT endpointy profilu, ćwiczeń i planów zwracają `401`.
+- [x] CORS dopuszcza adres frontendu, a żądanie z obcego originu odrzuca kodem `403`.
+- [x] Frontend i sześć sprawdzonych tras SPA zwracają `200`; publiczna paczka wskazuje właściwe API i tryb demonstracyjnej poczty.
+- [x] W bazie jest 48 ćwiczeń oraz przeniesione konto `USER`; kopie danych pozostają prywatne.
+- [ ] Na osobnym fikcyjnym koncie online: rejestracja zapisuje link w prywatnych logach, potwierdzenie aktywuje konto i można się zalogować.
+- [ ] Po zalogowaniu online: katalog pokazuje ćwiczenia i można utworzyć, odczytać, edytować oraz usunąć własny plan.
+- [ ] Online: reset hasła działa, a wcześniejsza sesja traci dostęp.
+- [ ] Online: usunięcie konta wymaga hasła i potwierdzenia przez jednorazowy link.
+- [ ] Podczas powyższych testów w przeglądarce nie występują błędy CORS ani próby połączenia z `localhost`.
 
-Weryfikację wiadomości i operacji usunięcia wykonuj na własnym koncie przeznaczonym do testów. Lokalne skrypty smoke są przeznaczone do lokalnego stacku i Mailpit; nie uruchamiaj ich przeciw produkcji.
+Sprawdzenia oznaczone jako wykonane dotyczą wdrożenia z 16 listopada 2026. Pełne scenariusze rejestracji, resetu hasła, usunięcia konta i CRUD planów sprawdzono lokalnie; nie wykonywano ich na przeniesionym koncie online. Weryfikacja lokalna obejmowała 157 testów backendu, 21 testów frontendu oraz build i lint frontendu. Pozycje online pozostają do ręcznego odbioru na osobnym fikcyjnym koncie.
+
+Weryfikację linków i usuwania wykonuj wyłącznie na własnym koncie testowym, po jednoznacznym przypisaniu linku do tego konta. Lokalne skrypty smoke są przeznaczone do lokalnego stacku i Mailpit; nie uruchamiaj ich przeciw produkcji.
+
+## Zmiany bazy w zespole
+
+1. Dodaj kolejny plik w `backend/src/main/resources/db/migration`, np. `V5__add_training_results.sql`. Uzgodnij numer z zespołem, aby dwa PR-y nie dodały różnych migracji V5. Wykonanych V1–V4 nie edytuj — poprawka dostaje nowy numer. Flyway zapisuje wykonane wersje i ich sumy kontrolne. [Migracje wersjonowane](https://documentation.red-gate.com/fd/versioned-migrations-273973333.html).
+2. W migracji dodaj `CREATE TABLE`, `ALTER TABLE` lub indeksy oraz odpowiednie zmiany encji i kodu. Nie wpisuj na sztywno schematu `public`: produkcyjny schemat `training_app` ustawia konfiguracja. Hibernate ma `ddl-auto=validate`, więc sam nie tworzy tabel.
+3. Sprawdź zmianę lokalnie w Dockerze i testach, również na bazie z istniejącymi danymi. Zmiana schematu i korzystający z niej kod powinny znaleźć się w tym samym PR.
+4. Po scaleniu do `main` Vercel wdraża backend. Przy jego starcie Flyway wykonuje brakujące migracje w Supabase, przez połączenie sesyjne na porcie `5432`. Nie trzeba ręcznie tworzyć tabel w panelu. Po wdrożeniu sprawdź logi Flyway i `/api/health`; błąd migracji zatrzymuje start aplikacji.
+
+Do zwykłej pracy nad kodem i migracjami członkowie zespołu nie potrzebują dostępu do Supabase ani hasła produkcyjnej bazy. Każdy korzysta z własnego lokalnego Dockera, a dane połączenia produkcyjnego są zapisane w Vercelu. Dostęp do panelu Supabase można nadać osobom zajmującym się podglądem danych, kopiami i administracją; służą do tego osobne zaproszenia i role, a nie wspólne konto. [Dostęp zespołu w Supabase](https://supabase.com/docs/guides/platform/access-control).
+
+Migracje powinny być krótkie i zgodne z poprzednią wersją działającego backendu. Najpierw dodawaj nowe struktury, a usuwanie starych lub długie przeliczenia danych planuj osobno. Cofnięcie wersji kodu w Vercelu nie cofa automatycznie zmian w bazie; zmiany usuwające dane wymagają wcześniejszej kopii i osobnego planu.
 
 ## Preview i kolejne migracje
 
