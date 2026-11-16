@@ -2,6 +2,12 @@
 
 Moduł `auth` obsługuje rejestrację, potwierdzenie e-maila, logowanie, odzyskanie hasła i potwierdzenie usunięcia konta. Moduł `user` udostępnia dane zalogowanego użytkownika i przyjmuje jego prośbę o usunięcie konta.
 
+## Dostarczanie linków
+
+W trybie `APP_MAIL_MODE=smtp` backend wysyła wiadomości przez skonfigurowany serwer SMTP. W demonstracyjnym `APP_MAIL_MODE=log` nie wysyła poczty: pełne linki zapisuje jako `[DEMO MAIL]` w prywatnych logach backendu, a administrator przekazuje właściwy link właścicielowi konta. W tym wariancie nie są wymagane dane SMTP ani `APP_MAIL_FROM`; frontend powinien mieć `VITE_MAIL_MODE=log`.
+
+Wersja [online](https://aplikacja-trenerska.vercel.app) korzysta z trybu demonstracyjnego (stan: 16 listopada 2026). Poniższe kroki dotyczą tych samych potwierdzeń i tokenów; link od administratora zastępuje wiadomość e-mail. Linków nie zwraca publiczne API. Do testów używaj fikcyjnego konta i nie publikuj logów ani linków.
+
 ## Przepływy
 
 ### Lokalne konto deweloperskie
@@ -81,15 +87,17 @@ Testy ról: `RoleSecurityIntegrationTests` sprawdzają prawdziwe JWT, reguły UR
 - Tokeny z wiadomości mają określone przeznaczenie i termin ważności. Nie można użyć tokenu aktywacji do zmiany hasła lub usunięcia konta.
 - Domyślnie aktywacja jest ważna 24 godziny, reset hasła 30 minut, a potwierdzenie usunięcia 30 minut.
 - Token można zrealizować tylko raz. Wiadomości tego samego rodzaju do danego konta można wysyłać co 60 sekund; żądania w tym czasie nie wysyłają kolejnej wiadomości. Po tym czasie nowy token zastępuje poprzedni token tego samego rodzaju.
-- Baza przechowuje skróty tokenów. Surowe tokeny są przekazywane wyłącznie w wiadomościach, bez logowania ich na konsolę.
+- Baza przechowuje skróty tokenów. W trybie `smtp` surowe tokeny trafiają wyłącznie do wiadomości i nie są logowane. Jawnie włączony tryb demonstracyjny `log` zapisuje pełne linki w prywatnych logach backendu; dostęp do tych logów pozwala wykonać operacje potwierdzane linkiem.
 - Reset hasła unieważnia wcześniejsze JWT. Weryfikacja sesji uwzględnia także aktywność i tożsamość konta, więc usunięcie i ponowna rejestracja na ten sam adres nie przywraca starej sesji.
 - Migracja V2 dodaje wersję sesji i usuwa wcześniejsze tokeny weryfikacyjne zapisane bez skrótu. JWT wydane przed tą zmianą nie mają wersji sesji i wymagają ponownego logowania.
 - Frontend weryfikuje sesję przez API przed pokazaniem chronionej strony i obsługuje wygaśnięcie sesji. Autoryzacja backendu obowiązuje niezależnie od zabezpieczenia tras Reacta.
-- Przed wdrożeniem publicznym należy użyć własnego sekretu JWT, produkcyjnego SMTP i publicznego adresu frontendu z HTTPS. Domyślna konfiguracja jest przeznaczona do lokalnej pracy.
+- Wdrożenie publiczne wymaga własnego sekretu JWT, profilu `prod` i adresu frontendu z HTTPS. Dostarczanie linków zapewnia produkcyjny SMTP albo jawnie wybrany demonstracyjny `APP_MAIL_MODE=log`. Domyślne dane lokalnej konfiguracji nie są ustawieniami produkcyjnymi. Szczegóły: [DEPLOYMENT.md](DEPLOYMENT.md).
 
 Hasło podczas rejestracji i resetu musi mieć co najmniej 8 znaków oraz maksymalnie 72 bajty po zakodowaniu w UTF-8 (ograniczenie BCrypt). Znaki spoza ASCII mogą zajmować więcej niż jeden bajt. Zmiana hasła usuwa także oczekujące tokeny usunięcia konta.
 
 ## Scenariusz sprawdzenia
+
+Pełny scenariusz sprawdzono lokalnie, również dla profilu `prod` z demonstracyjną pocztą. Po wdrożeniu zweryfikowano ochronę tras i odczyt bazy przy odmowie logowania; scenariuszy rejestracji, resetu i usunięcia online nie wykonywano na przeniesionym koncie. Pozostałe testy online wykonaj na osobnym fikcyjnym koncie zgodnie z [checklistą wdrożenia](DEPLOYMENT.md#5-sprawdź-wdrożenie).
 
 1. Uruchom aplikację i lokalną skrzynkę Mailpit zgodnie z README.
 2. Zarejestruj konto; sprawdź, że przed potwierdzeniem nie można się zalogować.

@@ -11,7 +11,7 @@
 
 > **Legenda:** sekcje oznaczone 📄 pochodzą wprost z formularza SMART. Sekcje oznaczone 💡 to propozycje techniczne (do uzgodnienia w zespole).
 
-> **Stan checklist: 15.11.2026.** `[x]` oznacza funkcję technicznie wdrożoną i sprawdzoną w opisanym zakresie; nie potwierdza zespołowego review, merge do `main` ani spełnienia Definition of Done całego projektu. Kalendarzowo trwa Sprint 1 (9–15.11); konta, fundament modelu planów i dane katalogu ćwiczeń ze Sprintu 2 wykonano z wyprzedzeniem. Szczegółowy status i pozostałe zadania: [SPRINTY.md](SPRINTY.md).
+> **Stan checklist: 16.11.2026.** Trwa Sprint 2 (16–22.11); konta i plany są technicznie gotowe. Wdrożenie na Vercel i Supabase należy do zadania **S3-11 w Sprincie 3 (23–29.11)** i zostało wykonane z wyprzedzeniem **16.11.2026**. Kod produkcyjny jest w `main`. `[x]` potwierdza opisany zakres techniczny; zespołowe review i Definition of Done całego projektu nadal wymagają osobnego potwierdzenia. Szczegóły: [SPRINTY.md](SPRINTY.md).
 
 ---
 
@@ -34,8 +34,8 @@ Dla zespołu to także nauka pełnego cyklu tworzenia aplikacji: backend + front
 |---|---|---|
 | Frontend | React + TypeScript + Vite, Tailwind CSS | ✅ ustalone |
 | Backend | Java + **Spring Boot** | ✅ ustalone |
-| Baza danych | **PostgreSQL** + **TimescaleDB** | ✅ ustalone |
-| Wdrożenie | **Docker** (docker compose) | ✅ ustalone |
+| Baza danych | **PostgreSQL**; lokalnie TimescaleDB, online Supabase PostgreSQL 17 | ✅ obecne moduły; technologia pomiarów online do decyzji przed S3 |
+| Wdrożenie | **Docker Compose** lokalnie; **Vercel + Supabase** online | ✅ działa; produkcja z `main`, poczta w trybie demo |
 
 ### Decyzja dotycząca frontendu
 
@@ -91,11 +91,19 @@ Priorytety (zgodnie z założeniem etapowej realizacji z formularza):
 ### M0. Infrastruktura (P1)
 
 - [x] Repozytorium Git i README z instrukcją uruchomienia
-- [ ] Uzgodniona konwencja branchy i PR-ów oraz zespołowe review
+- [x] Konwencja branchy `feat/*`, `fix/*`, `docs/*` i Conventional Commits; produkcja wdrażana z `main`
+- [ ] Potwierdzenie zespołowego procesu PR i review zmian
 - [x] `docker-compose.yml`: `db` (TimescaleDB), `backend`, `frontend`, lokalny SMTP Mailpit
 - [x] Flyway: migracje V1/V2 kont i tokenów, V3 ćwiczeń i planów, V4 katalogu ćwiczeń oraz `.env.example`
 - [x] Aplikacja uruchamia się jedną komendą: `docker compose up --build`
 - [x] Layout responsywny (mobile-first) obecnych ekranów kont, sprawdzony na komputerze i w emulowanym widoku mobilnym
+- [x] Frontend i backend na Vercelu, baza Supabase w schemacie `training_app`, HTTPS i CORS (S3-11, wykonano z wyprzedzeniem 16.11.2026)
+- [x] Migracje V1–V4 i 48 ćwiczeń w Supabase; przeniesienie jedynego lokalnego konta z kopiami zapasowymi poza GitHubem
+- [x] Automatyczne wdrożenia obu projektów z `main`; `feat/deployment` scalony i usunięty
+- [x] Demonstracja bez SMTP: linki kont w prywatnych logach backendu, odpowiednie komunikaty frontendu
+- [x] Sprawdzenia online: strony SPA, API `UP`, odczyt bazy, ochrona tras i CORS
+
+Adres aplikacji: [aplikacja-trenerska.vercel.app](https://aplikacja-trenerska.vercel.app). Konfiguracja i zakres potwierdzonych testów: [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ### M1. Konta użytkowników i autoryzacja (P1)
 
@@ -111,7 +119,7 @@ Priorytety (zgodnie z założeniem etapowej realizacji z formularza):
 
 Implementacja kont i kontrakt API: [ACCOUNTS.md](ACCOUNTS.md). Reset hasła unieważnia wcześniejsze JWT; jednorazowe tokeny mają przeznaczenie, termin ważności i skrót w bazie. Zaliczone sprawdzenia backendu na H2 i PostgreSQL 16: 111 testów (15 kont, 7 ról, 25 modelu planów, 3 katalogu, 19 API ćwiczeń, 41 API planów i uruchomienie kontekstu), w tym CRUD i izolacja własnych planów, walidacja oraz usuwanie konta z planem przy zachowaniu katalogu. Sprawdzono także aktualizacje V2 → V3 → V4 z istniejącymi danymi. Wcześniej sprawdzono 4 testy pomocniczych funkcji frontendu, build i lint frontendu oraz przepływy kont przez nginx z PostgreSQL i rzeczywistą wysyłką SMTP do Mailpit (`tests/smoke-accounts.mjs`). Potwierdzono również obejście crasha Brave podczas wpisywania nicku (`autocomplete="off"`).
 
-Mailpit przechwytuje wiadomości lokalnie; dostarczanie do rzeczywistych skrzynek wymaga konfiguracji zewnętrznego SMTP. Nie jest to warunek zamknięcia lokalnego zakresu Sprintu 2.
+Mailpit przechwytuje wiadomości lokalnie. Wdrożenie demonstracyjne korzysta z `APP_MAIL_MODE=log`: linki trafiają do prywatnych logów API, a frontend pokazuje tryb demo. Rzeczywista wysyłka wymaga zewnętrznego SMTP. Pełne przepływy kont i planów są sprawdzone lokalnie; ich powtórzenie online na koncie testowym pozostaje na checkliście odbioru wdrożenia w Sprincie 3 (S3-11). Najnowsze sprawdzenie lokalne konfiguracji obejmuje 157 testów backendu, 21 testów frontendu, build i lint.
 
 ### M2. Moduł użytkownika — plany treningowe (P1)
 
@@ -266,6 +274,7 @@ Postęp oceniamy za pomocą następujących wskaźników:
   - [ ] utworzenie grupy przez trenera i przypisanie planu podopiecznemu
 - [ ] Aplikacja **poprawnie wyświetla się i działa na komputerach i urządzeniach mobilnych** — ekrany kont sprawdzone na komputerze i w emulacji; pozostałe moduły i test na prawdziwym telefonie jeszcze przed zespołem
 - [x] Obecna aplikacja **uruchamia się w kontenerach Docker** (backend, baza danych, frontend, Mailpit); migracje V1–V4 oraz przepływy kont i planów sprawdzone
+- [x] Obecna aplikacja jest dostępna online na Vercelu z bazą Supabase i wdrożeniami produkcyjnymi z `main`; sprawdzono dostępność, odczyt bazy, CORS i ochronę tras (S3-11, wykonano 16.11.2026)
 - [ ] **Cotygodniowe podsumowanie postępów** w zespole, z odniesieniem do listy zadań
 
 ---
@@ -280,7 +289,7 @@ Harmonogram jest zgodny z operacyjnym podziałem zadań w [SPRINTY.md](SPRINTY.m
 |---|---|---|---|
 | **S1** | 9–15.11 | Fundament i logowanie | Repo, Docker Compose, migracje, React + Vite, rejestracja i logowanie (M0, część M1) |
 | **S2** | 16–22.11 | Konta i plany | Potwierdzenie e-maila, reset hasła, usuwanie konta, role (M1); baza ćwiczeń, CRUD planów i widoki mobile (M2) |
-| **S3** | 23–29.11 | Progres i trener | Wyniki, waga, obwody, wykresy (M3); grupy trenera i przypisywanie planów (M4) |
+| **S3** | 23–29.11 | Progres, trener i wdrożenie | Wyniki, waga, obwody, wykresy (M3); grupy trenera i przypisywanie planów (M4); Vercel i Supabase (S3-11, wykonano z wyprzedzeniem 16.11) |
 | **S4** | 30.11–6.12 | Dodatki | Udostępnianie planów, kalkulatory, kalendarz, statystyki (M5, M6) |
 | **S5** | 7–13.12 | Stabilizacja | Algorytm oceny planów, testy mobile, poprawki, dokumentacja i dane demo |
 | **Bufor** | 14–19.12 | Oddanie | Tylko poprawki, dokumentacja, finalny `docker compose up` i oddanie |
@@ -297,6 +306,7 @@ Harmonogram jest zgodny z operacyjnym podziałem zadań w [SPRINTY.md](SPRINTY.m
 | Brak doświadczenia z frameworkiem frontendowym | Wysoki | Szybki wybór w T1, nauka na małych zadaniach, gotowa biblioteka UI |
 | Szeroki zakres funkcjonalny | Średni | Realizacja etapami: **1)** web + konta + plany trenera/użytkownika, **2)** kalendarz, kalkulatory, statystyki, udostępnianie, **3)** social, mini-Fitatu, wydarzenia |
 | Nowa technologia: TimescaleDB | Średni | Standardowy PostgreSQL + `create_hypertable` tylko dla tabel pomiarów |
+| TimescaleDB w hostingu Supabase | Wysoki dla S3 | Obecne wdrożenie używa PostgreSQL 17 bez TimescaleDB; przed modułem progresu uzgodnić rozwiązanie pomiarów lub inny hosting bazy ([szczegóły](DEPLOYMENT.md#preview-i-kolejne-migracje)) |
 | Konfiguracja Dockera | Średni | Docker Compose uruchomiony już w T1, nie na koniec |
 
 ---
@@ -338,7 +348,7 @@ Zadanie uznajemy za skończone, gdy:
 
 | Moduł | Osoba | Status |
 |---|---|---|
-| M0 Infrastruktura / Docker | | 🟡 infrastruktura działa; konwencja Git/PR i review do uzgodnienia |
+| M0 Infrastruktura / Docker | | 🟡 Docker i Vercel/Supabase działają, produkcja z `main`; proces PR i zespołowe review do potwierdzenia |
 | M1 Konta i autoryzacja | | ✅ przepływy kont, operatorowe nadawanie roli trenera i testy obecnych uprawnień gotowe; nowe endpointy wymagają zabezpieczenia podczas implementacji |
 | M2 Plany treningowe | | ✅ model, katalog, API, listy, kreator, edycja i usuwanie gotowe; pełny przepływ UI sprawdzony w Dockerze |
 | M3 Progres | | ☐ do wykonania |
