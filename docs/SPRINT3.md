@@ -1,6 +1,6 @@
 # Progres i współpraca z trenerem — Sprint 3
 
-Implementacja przygotowana 19.11.2026 na `feat/sprint-3`. Planowane daty sprintu pozostają 23–29.11. Status testów i publikacji jest w [SPRINTY.md](SPRINTY.md).
+Implementację przygotowano 19.11.2026 na `feat/sprint-3`, wypchnięto i scalono do `main` commitem `f40d008`. Tego samego dnia kod wdrożono w obu projektach Vercela, a Flyway potwierdził wykonanie V5–V7 w Supabase. Planowane daty sprintu pozostają 23–29.11. Status testów i publikacji jest w [SPRINTY.md](SPRINTY.md).
 
 ## Korzystanie z aplikacji
 
@@ -94,7 +94,9 @@ Sprawdzone 19.11.2026:
 - Pełny test UI opisany niżej przeszedł na Compose z prawdziwym API i SMTP do Mailpit. Sprawdzono komputer 1280 × 900 oraz widok 375 × 812, zachowanie formularza po błędzie i odebranie dostępu po zakończeniu współpracy. Brak poziomego przewijania oraz błędów JavaScript; zrzuty sprawdzono wizualnie. Osie wykresów dodatkowo sprawdzono po poprawce: etykiety 12 px przy obu szerokościach.
 - `tests/smoke-deployment.ps1`: profil `prod`, port 8097, schemat `training_app`, V1–V7, CORS, ochrona tras, SMTP oraz przepływ konta i planu.
 
-Pozostają zespołowe review, test na rzeczywistym telefonie oraz scalenie/publikacja i odbiór nowych funkcji online. Sprawdzenia lokalne nie oznaczają wykonania nowych migracji na produkcyjnym Supabase.
+Online 19.11 potwierdzono `READY` frontendu i backendu dla commita `f40d008`, API `UP`, wykonanie trzech migracji V5–V7 w Supabase, ponowny start bez nowych migracji, sześć tras SPA (`200`), ochronę sześciu endpointów bez JWT (`401`), CORS i odczyt bazy przy odmowie logowania nieistniejącym kontem. Paczka frontendu zawiera nowe moduły i używa standardowych komunikatów kont. Szczegóły dowodów: [DEPLOYMENT.md](DEPLOYMENT.md).
+
+Pozostają zespołowe review, test na rzeczywistym telefonie oraz pełny odbiór operacji na zalogowanym koncie online. Pełny scenariusz zapisu wyników i współpracy z trenerem został sprawdzony lokalnie; opisane sprawdzenia dostępności i migracji online nie zastępują tego odbioru.
 
 ```powershell
 # Backend: zwykły PostgreSQL 17 w prywatnym schemacie training_app + aktualizacja V4 -> V7

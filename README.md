@@ -96,7 +96,7 @@ Wrapper `backend/mvnw` musi mieć końce linii LF, zgodnie z `.gitattributes`, a
 
 ## Wdrożenie na Vercel i Supabase
 
-Stan na 16 listopada 2026: frontend działa pod adresem podanym wyżej, a backend pod [aplikacja-trenerska-api.vercel.app](https://aplikacja-trenerska-api.vercel.app). Oba projekty Vercel wdrażają `main`. Backend Java 21 używa Container Runtime w Dublinie (`dub1`), a Supabase PostgreSQL 17 w `eu-west-1` przechowuje prywatny schemat `training_app` z migracjami V1–V4 i 48 ćwiczeniami. Przeniesiono także jedno istniejące konto `USER`; dane konta i kopie zapasowe pozostają poza repozytorium.
+Stan na 19 listopada 2026: frontend działa pod adresem podanym wyżej, a backend pod [aplikacja-trenerska-api.vercel.app](https://aplikacja-trenerska-api.vercel.app). Oba projekty Vercel wdrażają `main`; opublikowano także progres i moduł trenera ze Sprintu 3. Backend Java 21 używa Container Runtime w Dublinie (`dub1`), a Supabase PostgreSQL 17 w `eu-west-1` przechowuje prywatny schemat `training_app` z migracjami V1–V7 i katalogiem 48 ćwiczeń. Flyway potwierdził aktualizację V4 → V7, API zwraca `UP`, a nowe trasy i ochrona endpointów przeszły sprawdzenie online. Przy pierwszym wdrożeniu przeniesiono jedno istniejące konto `USER`; dane konta i kopie zapasowe pozostają poza repozytorium.
 
 Profil backendu `prod` oddziela ustawienia wdrożenia od lokalnych profili `docker,dev`. Frontend na Vercel wymaga publicznego adresu backendu w `VITE_API_URL`; lokalny pusty adres zachowuje proxy `/api`.
 

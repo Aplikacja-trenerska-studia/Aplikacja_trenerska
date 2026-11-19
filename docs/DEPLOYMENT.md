@@ -1,16 +1,18 @@
 # Wdrożenie: Vercel i Supabase
 
-## Stan wdrożenia — 16 listopada 2026
+## Stan wdrożenia — 19 listopada 2026
 
-Wdrożenie działa publicznie. Zadanie **S3-11** należy do **Sprintu 3 (23–29 listopada)** i zostało wykonane z wyprzedzeniem **16 listopada 2026**. Oba projekty Vercel śledzą produkcyjny branch `main`; sprawdzono wersję po scaleniu `ee2fa1e`.
+Wdrożenie działa publicznie. Zadanie **S3-11** należy do **Sprintu 3 (23–29 listopada)**; pierwsze wdrożenie wykonano z wyprzedzeniem **16 listopada 2026**, a progres i moduł trenera opublikowano **19 listopada**. Oba projekty Vercel śledzą produkcyjny branch `main`; sprawdzono kod po scaleniu [`f40d008`](https://github.com/Aplikacja-trenerska-studia/Aplikacja_trenerska/commit/f40d008a4639c8658cf8b181dc8e1ab6eed6d1ce).
 
-**Zmiany z 19.11.2026:** nowe funkcje progresu i trenera z migracjami V5–V7 przygotowano i sprawdzono lokalnie na `feat/sprint-3`. Poniższa tabela opisuje historyczne wdrożenie V1–V4 z 16.11. Publikacja backendu wykonuje V5–V7 przy pierwszym starcie; na Supabase PG17 V7 pozostawia zwykłe tabele z indeksami. Bieżący odbiór publikacji jest rozliczany osobno w [checkliście S3](SPRINTY.md#publikacja-i-odbiór-s3). Pełny opis i wyniki testów: [SPRINT3.md](SPRINT3.md).
+**Aktualizacja z 19.11.2026:** `feat/sprint-3` wypchnięto i scalono commitem merge. Frontend i backend Vercela osiągnęły `READY` dla tego samego kodu. Logi Flyway potwierdzają aktualizację Supabase ze schematu V4 do V7: trzy migracje wykonano poprawnie o 18:38 czasu polskiego (0,472 s), a kolejny start rozpoznał wersję 7 bez ponawiania migracji. Na Supabase PostgreSQL 17 V7 pozostawia zwykłe tabele z indeksami; hypertabele działają w lokalnym TimescaleDB. Publikację rozlicza [checklista S3](SPRINTY.md#publikacja-i-odbiór-s3); pełny opis funkcji: [SPRINT3.md](SPRINT3.md).
+
+Sprawdzone wdrożenia kodu: API `dpl_FZ3j8aACrkDVQ6dJqVdHUXAS37RP`, frontend `dpl_ZhuuVuPRipQkPZcqjwQkTqnwzYrR`. Potwierdzenie migracji pochodzi z Runtime Logs backendu połączonego z Supabase PostgreSQL 17.12 i jego poprawnego startu z walidacją Hibernate; nie wykonywano dodatkowego SQL w panelu Supabase.
 
 | Część | Działające wdrożenie |
 |---|---|
 | Frontend | [aplikacja-trenerska.vercel.app](https://aplikacja-trenerska.vercel.app), projekt `aplikacja-trenerska-frontend` |
 | Backend | [aplikacja-trenerska-api.vercel.app](https://aplikacja-trenerska-api.vercel.app), Java 21 / Container Runtime, region `dub1` |
-| Baza | Supabase PostgreSQL 17, `eu-west-1`, prywatny schemat `training_app`, migracje V1–V4 i 48 ćwiczeń |
+| Baza | Supabase PostgreSQL 17, `eu-west-1`, prywatny schemat `training_app`, migracje V1–V7 i katalog 48 ćwiczeń |
 
 Konfiguracja poczty w ostatnim sprawdzonym wdrożeniu używa `APP_MAIL_MODE=log`. Ten transport zapisuje linki w prywatnych logach zamiast dostarczać wiadomości. Docelowa wysyłka do skrzynek wymaga ustawień SMTP opisanych poniżej. Interfejs kont jest wspólny dla wszystkich transportów poczty.
 
@@ -145,11 +147,11 @@ Lokalne Vite i Docker zachowują dotychczasowe działanie: przy pustym `VITE_API
 ## 5. Sprawdź wdrożenie
 
 - [x] Oba projekty działają pod publicznymi adresami HTTPS i wdrażają `main`.
-- [x] Backend działa z profilem `prod`; `/api/health` zwraca `UP`, migracje V1–V4 przeszły i nie utworzono konta developerskiego.
+- [x] Backend działa z profilem `prod`; `/api/health` zwraca `UP`. V5–V7 wykonano 19.11, a kolejny start potwierdził aktualny schemat V7. Profil produkcyjny nie tworzy konta developerskiego.
 - [x] Zapytanie logowania losowym nieistniejącym kontem zwraca `401` po odczycie bazy Supabase.
-- [x] Bez JWT endpointy profilu, ćwiczeń i planów zwracają `401`.
+- [x] Bez JWT endpointy profilu, ćwiczeń i planów zwracają `401`. Po aktualizacji 19.11 sprawdzono również wyniki, pomiary, grupy, zaproszenia i przypisania (`401`).
 - [x] CORS dopuszcza adres frontendu, a żądanie z obcego originu odrzuca kodem `403`.
-- [x] Frontend i sześć sprawdzonych tras SPA zwracają `200`; publiczna paczka wskazuje właściwe API.
+- [x] Frontend zwraca `200` dla `/`, `/trening`, `/progres`, `/trener`, `/wspolpraca`, `/rejestracja`. Paczka zawiera moduły S3 i używa standardowych komunikatów kont.
 - [x] W bazie jest 48 ćwiczeń oraz przeniesione konto `USER`; kopie danych pozostają prywatne.
 - [ ] Na osobnym fikcyjnym koncie online: rejestracja zapisuje link w prywatnych logach, potwierdzenie aktywuje konto i można się zalogować.
 - [ ] Po zalogowaniu online: katalog pokazuje ćwiczenia i można utworzyć, odczytać, edytować oraz usunąć własny plan.

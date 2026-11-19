@@ -11,7 +11,7 @@
 
 > **Legenda:** sekcje oznaczone 📄 pochodzą wprost z formularza SMART. Sekcje oznaczone 💡 to propozycje techniczne (do uzgodnienia w zespole).
 
-> **Stan checklist: 19.11.2026.** Konta i plany ze Sprintu 2 oraz funkcje progresu i trenera ze Sprintu 3 są technicznie gotowe i sprawdzone lokalnie. Implementację S3 przygotowano 19.11 na `feat/sprint-3`; publikację, wdrożenie i odbiór rozliczamy osobno w [checkliście S3](SPRINTY.md#publikacja-i-odbiór-s3). Harmonogram **S3: 23–29.11** pozostaje bez zmian. Pierwsze wdrożenie Vercel/Supabase (**S3-11**) wykonano **16.11.2026**. `[x]` potwierdza opisany zakres techniczny; zespołowe review i Definition of Done wymagają osobnego potwierdzenia. Szczegóły: [SPRINTY.md](SPRINTY.md), [SPRINT3.md](SPRINT3.md).
+> **Stan checklist: 19.11.2026.** Konta i plany ze Sprintu 2 oraz funkcje progresu i trenera ze Sprintu 3 są technicznie gotowe i sprawdzone lokalnie. `feat/sprint-3` wypchnięto i scalono do `main` przez commit `f40d008`; wdrożenia obu projektów Vercela oraz wykonanie migracji Supabase do V7 potwierdzono 19.11. Publikację i pełny odbiór funkcji rozliczamy osobno w [checkliście S3](SPRINTY.md#publikacja-i-odbiór-s3). Harmonogram **S3: 23–29.11** pozostaje bez zmian. Pierwsze wdrożenie Vercel/Supabase (**S3-11**) wykonano **16.11.2026**. `[x]` potwierdza opisany zakres techniczny; zespołowe review, test na rzeczywistym telefonie i pełny pozytywny przepływ online wymagają osobnego potwierdzenia. Szczegóły: [SPRINTY.md](SPRINTY.md), [SPRINT3.md](SPRINT3.md).
 
 ---
 
@@ -34,8 +34,8 @@ Dla zespołu to także nauka pełnego cyklu tworzenia aplikacji: backend + front
 |---|---|---|
 | Frontend | React + TypeScript + Vite, Tailwind CSS | ✅ ustalone |
 | Backend | Java + **Spring Boot** | ✅ ustalone |
-| Baza danych | **PostgreSQL**; lokalnie TimescaleDB, online Supabase PostgreSQL 17 | ✅ wspólny model pomiarów i V5–V7 sprawdzone na PostgreSQL 17 oraz TimescaleDB/PostgreSQL 16; zastosowanie migracji produkcyjnych potwierdza checklista S3 |
-| Wdrożenie | **Docker Compose** lokalnie; **Vercel + Supabase** online | ✅ hosting uruchomiony 16.11, wdrożenia z `main`; potwierdzony transport poczty: `log`, bez wysyłki wiadomości |
+| Baza danych | **PostgreSQL**; lokalnie TimescaleDB, online Supabase PostgreSQL 17 | ✅ oba warianty sprawdzone lokalnie; wykonanie V5–V7 w produkcji potwierdzone logami Flyway 19.11 |
+| Wdrożenie | **Docker Compose** lokalnie; **Vercel + Supabase** online | ✅ S3 wdrożony 19.11 z `main` (`f40d008`), oba projekty READY; transport poczty `log`, bez wysyłki wiadomości |
 
 ### Decyzja dotycząca frontendu
 
@@ -100,8 +100,10 @@ Priorytety (zgodnie z założeniem etapowej realizacji z formularza):
 - [x] V5: wyniki i pomiary, V6: grupy i przypisania, V7: warunkowe włączenie hypertabel; aktualizacja V4 → V7 zachowuje istniejące konto i plan, ponowny start nie wykonuje migracji drugi raz
 - [x] Aplikacja uruchamia się jedną komendą: `docker compose up --build`
 - [x] Layout responsywny (mobile-first) obecnych ekranów kont, sprawdzony na komputerze i w emulowanym widoku mobilnym
-- [x] Frontend i backend na Vercelu, baza Supabase w schemacie `training_app`, HTTPS i CORS (S3-11, wykonano z wyprzedzeniem 16.11.2026)
-- [x] Migracje V1–V4 i 48 ćwiczeń w Supabase; przeniesienie jedynego lokalnego konta z kopiami zapasowymi poza GitHubem
+- [x] Frontend i backend na Vercelu, baza Supabase w schemacie `training_app`, HTTPS i CORS (S3-11: pierwsze wdrożenie 16.11, publikacja funkcji S3 19.11)
+- [x] Migracje V1–V4 i 48 ćwiczeń w Supabase od 16.11; przeniesienie jedynego lokalnego konta z kopiami zapasowymi poza GitHubem
+- [x] Publikacja `feat/sprint-3` z commitem `10769cb` i scalenie `--no-ff` do `main` przez `f40d008`, wypchnięte na GitHuba 19.11
+- [x] Wdrożenia produkcyjne obu projektów Vercela READY dla `f40d008`; migracje V5–V7 wykonane w Supabase PostgreSQL 17.12, potwierdzone logami Flyway i prawidłowym startem backendu
 - [x] Automatyczne wdrożenia obu projektów z `main`; `feat/deployment` scalony i usunięty
 - [x] Backend obsługuje opcjonalny transport `APP_MAIL_MODE=log`, który zapisuje linki kont w prywatnych logach bez wysyłania wiadomości
 - [x] Sprawdzenia online: strony SPA, API `UP`, odczyt bazy, ochrona tras i CORS
@@ -123,7 +125,7 @@ Adres aplikacji: [aplikacja-trenerska.vercel.app](https://aplikacja-trenerska.ve
 
 Implementacja kont i kontrakt API: [ACCOUNTS.md](ACCOUNTS.md). Reset hasła unieważnia wcześniejsze JWT; jednorazowe tokeny mają przeznaczenie, termin ważności i skrót w bazie. Zaliczone sprawdzenia backendu na H2 i PostgreSQL 16: 111 testów (15 kont, 7 ról, 25 modelu planów, 3 katalogu, 19 API ćwiczeń, 41 API planów i uruchomienie kontekstu), w tym CRUD i izolacja własnych planów, walidacja oraz usuwanie konta z planem przy zachowaniu katalogu. Sprawdzono także aktualizacje V2 → V3 → V4 z istniejącymi danymi. Wcześniej sprawdzono 4 testy pomocniczych funkcji frontendu, build i lint frontendu oraz przepływy kont przez nginx z PostgreSQL i rzeczywistą wysyłką SMTP do Mailpit (`tests/smoke-accounts.mjs`). Potwierdzono również obejście crasha Brave podczas wpisywania nicku (`autocomplete="off"`).
 
-Mailpit przechwytuje wiadomości lokalnie. Ostatnio potwierdzone wdrożenie korzystało z `APP_MAIL_MODE=log`: linki trafiały do prywatnych logów API. Rzeczywista wysyłka wymaga zewnętrznego SMTP; wybór transportu nie zmienia interfejsu użytkownika. Pełne przepływy kont, planów i S3 sprawdzono lokalnie; ich powtórzenie online na koncie testowym pozostaje na checkliście odbioru S3-11. Weryfikacja z 19.11: po 216 testów backendu bez błędów na PostgreSQL 17 i TimescaleDB/PostgreSQL 16; na H2 215 zaliczonych i 1 celowo pominięty test wymagający PostgreSQL. Frontend: 27 testów, build i lint zaliczone. Szczegóły i powtarzalne polecenia: [SPRINT3.md](SPRINT3.md).
+Mailpit przechwytuje wiadomości lokalnie. Produkcja korzysta z `APP_MAIL_MODE=log`: linki trafiają do prywatnych logów API, wiadomości nie są wysyłane. Rzeczywista wysyłka wymaga zewnętrznego SMTP; wybór transportu nie zmienia interfejsu użytkownika. Pełne przepływy kont, planów i S3 sprawdzono lokalnie; ich powtórzenie online na koncie testowym pozostaje na checkliście odbioru S3-11. Weryfikacja z 19.11: po 216 testów backendu bez błędów na PostgreSQL 17 i TimescaleDB/PostgreSQL 16; na H2 215 zaliczonych i 1 celowo pominięty test wymagający PostgreSQL. Frontend: 27 testów, build i lint zaliczone. Szczegóły i powtarzalne polecenia: [SPRINT3.md](SPRINT3.md).
 
 ### M2. Moduł użytkownika — plany treningowe (P1)
 
@@ -296,7 +298,7 @@ Postęp oceniamy za pomocą następujących wskaźników:
   - [x] utworzenie grupy przez trenera, akceptacja zaproszenia, przypisanie kopii planu, wykonanie treningu z kopii i odebranie dostępu po opuszczeniu grupy
 - [ ] Aplikacja **poprawnie wyświetla się i działa na komputerach i urządzeniach mobilnych** — nowe ekrany sprawdzono przy 1280 × 900 i 375 × 812 bez poziomego przewijania i błędów JavaScript; test na prawdziwym telefonie pozostaje do wykonania
 - [x] Obecna aplikacja **uruchamia się w kontenerach Docker** (backend, baza danych, frontend, Mailpit); migracje V1–V7 oraz pełny przepływ rejestracja → plan → wynik → współpraca z trenerem sprawdzone lokalnie
-- [x] Obecna aplikacja jest dostępna online na Vercelu z bazą Supabase i wdrożeniami produkcyjnymi z `main`; sprawdzono dostępność, odczyt bazy, CORS i ochronę tras (S3-11, wykonano 16.11.2026)
+- [x] Aplikacja z funkcjami S3 jest dostępna online na Vercelu z bazą Supabase i wdrożeniami produkcyjnymi z `main`; 19.11 potwierdzono READY dla obu projektów, migracje do V7, dostępność, odczyt bazy, CORS i ochronę tras. Pełny pozytywny przepływ online jest osobnym punktem odbioru
 - [ ] **Cotygodniowe podsumowanie postępów** w zespole, z odniesieniem do listy zadań
 
 ---
@@ -328,7 +330,7 @@ Harmonogram jest zgodny z operacyjnym podziałem zadań w [SPRINTY.md](SPRINTY.m
 | Brak doświadczenia z frameworkiem frontendowym | Wysoki | Szybki wybór w T1, nauka na małych zadaniach, gotowa biblioteka UI |
 | Szeroki zakres funkcjonalny | Średni | Realizacja etapami: **1)** web + konta + plany trenera/użytkownika, **2)** kalendarz, kalkulatory, statystyki, udostępnianie, **3)** social, mini-Fitatu, wydarzenia |
 | Nowa technologia: TimescaleDB | Średni | Standardowy PostgreSQL + `create_hypertable` tylko dla tabel pomiarów |
-| Dwa warianty bazy pomiarów | Średni | Hypertabele TimescaleDB w Dockerze oraz zwykłe tabele na Supabase PostgreSQL 17. V7 rozpoznaje rozszerzenie; oba warianty i aktualizację V4 → V7 sprawdzono lokalnie. Po wdrożeniu trzeba potwierdzić migracje na produkcji ([szczegóły](DEPLOYMENT.md#preview-i-kolejne-migracje)) |
+| Dwa warianty bazy pomiarów | Średni | Hypertabele TimescaleDB w Dockerze oraz zwykłe tabele na Supabase PostgreSQL 17. V7 rozpoznaje rozszerzenie; oba warianty i aktualizację V4 → V7 sprawdzono lokalnie, wykonanie migracji produkcyjnych potwierdzono logami Flyway 19.11. Kolejne zmiany wymagają sprawdzenia obu wariantów ([szczegóły](DEPLOYMENT.md#preview-i-kolejne-migracje)) |
 | Dostęp trenera do danych podopiecznych | Wysoki | Wymagana akceptacja zaproszenia; opuszczenie grupy odbiera podgląd. Testy izolacji kont, grup i usuwania relacji są częścią S3 |
 | Konfiguracja Dockera | Średni | Docker Compose uruchomiony już w T1, nie na koniec |
 

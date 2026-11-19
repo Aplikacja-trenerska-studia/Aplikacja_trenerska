@@ -2,7 +2,7 @@
 
 > Uzupełnienie do `PLAN.md`. Sprint = 1 tydzień (pon–nd). Termin oddania projektu: **19.12.2026**.
 
-> **Stan na 19.11.2026:** konta i plany ze Sprintu 2 oraz progres i trener (S3-01–S3-10) są technicznie gotowe i sprawdzone lokalnie. Implementację S3 przygotowano 19.11 na `feat/sprint-3`; publikację, wdrożenie i odbiór rozliczamy osobno w [checkliście poniżej](#publikacja-i-odbiór-s3). Terminu Sprintu 3 (**23–29.11**) nie zmieniamy. Pierwsze wdrożenie Vercel/Supabase (S3-11) wykonano wcześniej, 16.11. Szczegóły: [SPRINT3.md](SPRINT3.md), [DEPLOYMENT.md](DEPLOYMENT.md).
+> **Stan na 19.11.2026:** konta i plany ze Sprintu 2 oraz progres i trener (S3-01–S3-10) są technicznie gotowe i sprawdzone lokalnie. `feat/sprint-3` wypchnięto, scalono do `main` przez `f40d008` i wdrożono w obu projektach Vercela; wykonanie migracji Supabase do V7 potwierdzono 19.11. Publikację i pełny odbiór rozliczamy osobno w [checkliście poniżej](#publikacja-i-odbiór-s3). Terminu Sprintu 3 (**23–29.11**) nie zmieniamy. Pierwsze wdrożenie Vercel/Supabase (S3-11) wykonano wcześniej, 16.11. Szczegóły: [SPRINT3.md](SPRINT3.md), [DEPLOYMENT.md](DEPLOYMENT.md).
 
 **Legenda:** ✅ / `[x]` — technicznie wykonane i sprawdzone w opisanym zakresie; 🟡 — częściowo; ☐ / `[ ]` — pozostaje do wykonania albo potwierdzenia. Status funkcji nie zastępuje zespołowego review ani całej Definition of Done; scalenie i wdrożenie są raportowane osobno.
 
@@ -208,7 +208,7 @@ Kontrakt endpointów kont i scenariusze weryfikacji: [ACCOUNTS.md](ACCOUNTS.md).
 | S3-08 | Frontend: zaproszenia, ich akceptacja, opuszczenie grupy i przypisane plany | FE-1 | | ✅ akceptacja, otrzymana kopia i trening z kopii sprawdzone |
 | S3-09 | Trener: historia, pomiary i wykresy zaakceptowanego podopiecznego | BE-1 / FE-2 | | ✅ podgląd i odebranie dostępu po opuszczeniu grupy sprawdzone |
 | S3-10 | Test przepływu: rejestracja → plan → wynik → akceptacja zaproszenia → przypisanie planu | BE-2 | | ✅ `tests/smoke-sprint3-ui.mjs` przeszedł na pełnym stacku Docker |
-| S3-11 | Vercel/Supabase, produkcja z `main`, migracja konta i transport poczty `log` | OPS | | ✅ infrastruktura uruchomiona 16.11; publikacja i odbiór nowych funkcji według checklisty poniżej |
+| S3-11 | Vercel/Supabase, produkcja z `main`, migracja konta i transport poczty `log` | OPS | | ✅ infrastruktura od 16.11; S3 wdrożony 19.11, oba projekty READY, migracje Supabase do V7 potwierdzone; pełny odbiór online osobno |
 
 
 **Scenariusz:** użytkownik zapisuje trening i widzi wykres; trener tworzy grupę, podopieczny akceptuje zaproszenie, a trener przypisuje mu plan.
@@ -235,13 +235,22 @@ Implementację przygotowano na `feat/sprint-3` 19.11.2026. Testy backendu, front
 
 ### Publikacja i odbiór S3
 
-- [ ] **Publikacja brancha:** utworzyć commit i wypchnąć `feat/sprint-3` na GitHuba.
-- [ ] **Scalenie:** połączyć `feat/sprint-3` z `main` przez commit scalający (`--no-ff`) i wypchnąć `main`.
-- [ ] **Wdrożenie:** potwierdzić gotowe wdrożenia obu projektów Vercela z `main`, zdrowie API, migracje V1–V7 w Supabase, ochronę tras i CORS.
+- [x] **Publikacja brancha:** `feat/sprint-3` wypchnięty na GitHuba z commitem [`10769cb`](https://github.com/Aplikacja-trenerska-studia/Aplikacja_trenerska/commit/10769cb4cfc171536c407dd9a5aa6a0c697031fc).
+- [x] **Scalenie:** `feat/sprint-3` połączony z `main` przez commit scalający `--no-ff` [`f40d008`](https://github.com/Aplikacja-trenerska-studia/Aplikacja_trenerska/commit/f40d008a4639c8658cf8b181dc8e1ab6eed6d1ce); `main` wypchnięty na GitHuba.
+- [x] **Wdrożenie:** oba projekty Vercela mają produkcyjne wdrożenia READY dla `f40d008`, a branch produkcyjny pozostaje `main`. Potwierdzono zdrowie API, migracje Supabase do V7, ochronę tras i CORS w zakresie opisanym poniżej.
 - [ ] **Review zespołowe:** przeprowadzić review z udziałem co najmniej jednej osoby z zespołu.
 - [ ] **Pełny odbiór online:** na osobnym koncie testowym wykonać rejestrację, aktywację, plan, trening, pomiary, współpracę z trenerem oraz przepływy resetu hasła i usunięcia konta. Uwzględnić rzeczywiście skonfigurowany transport poczty.
 - [ ] **Rzeczywisty telefon:** sprawdzić nowe ekrany na fizycznym urządzeniu.
 - [ ] **Domknięcie zespołowe:** uzupełnić raport sprintu i właścicieli zadań.
+
+### Potwierdzenie wdrożenia S3 — 19.11.2026
+
+- [x] Oba projekty Vercela: produkcyjne wdrożenia READY z tego samego commita scalającego `f40d008`. Ustawienie Production Branch pozostało `main`.
+- [x] Supabase PostgreSQL 17.12: logi Flyway z 17:38:43–17:38:44 UTC (18:38 w Warszawie) pokazują aktualizację V4 → V5 (`training progress`) → V6 (`trainer groups`) → V7 (migracja Java). Wykonano 3 migracje w 0,472 s. Kolejny start potwierdził V7 bez wykonywania kolejnych migracji.
+- [x] Backend zwraca `UP`; frontend zwraca `200` dla `/`, `/trening`, `/progres`, `/trener`, `/wspolpraca` i `/rejestracja`. Paczka frontendu zawiera nowe ekrany S3 i nie zawiera wcześniejszego tekstu prezentacyjnego.
+- [x] Sześć chronionych endpointów API odmawia dostępu bez JWT (`401`). CORS dopuszcza frontend (`200`) i odrzuca obcy origin (`403`). Próba logowania nieistniejącym kontem zwraca `401` po odczycie bazy.
+
+Potwierdzenie migracji pochodzi z logów Flyway, walidacji Hibernate, udanego startu backendu i sprawdzeń HTTP; nie wykonano bezpośredniego odczytu SQL w panelu Supabase. Te sprawdzenia nie zastępują pełnego pozytywnego przepływu rejestracji, planu, progresu i współpracy z trenerem online. Produkcyjny `APP_MAIL_MODE=log` zapisuje linki w prywatnych logach i nie wysyła rzeczywistych wiadomości.
 
 ### Postęp Sprintu 3 — wdrożenie S3-11 (16.11.2026)
 
@@ -262,7 +271,7 @@ Pierwsze wdrożenie wykonano przed planowanym terminem Sprintu 3. Opisany tu his
 ### Ryzyka wdrożenia
 
 - Ostatnio potwierdzona konfiguracja online używa `log`, bez wysyłki wiadomości. Linki pozwalają wykonać operacje na koncie, dlatego logi pozostają prywatne. Dostarczanie wiadomości do użytkowników wymaga skonfigurowanego SMTP.
-- W Supabase PostgreSQL 17 nie ma TimescaleDB. Uzgodnione V5/V7 zachowują zgodność zwykłych tabel online i hypertabel lokalnych; oba warianty oraz aktualizację istniejącej bazy sprawdzono lokalnie. Po wdrożeniu należy potwierdzić wykonanie nowych migracji i przepływy na produkcji. Szczegóły: [DEPLOYMENT.md](DEPLOYMENT.md#preview-i-kolejne-migracje).
+- W Supabase PostgreSQL 17 nie ma TimescaleDB. Uzgodnione V5/V7 zachowują zgodność zwykłych tabel online i hypertabel lokalnych; oba warianty oraz aktualizację istniejącej bazy sprawdzono lokalnie. Wykonanie nowych migracji na produkcji potwierdzono logami Flyway 19.11; pełny pozytywny przepływ online pozostaje osobnym punktem odbioru. Szczegóły: [DEPLOYMENT.md](DEPLOYMENT.md#preview-i-kolejne-migracje).
 
 ### Raport — Sprint 3
 
@@ -270,7 +279,7 @@ Pierwsze wdrożenie wykonano przed planowanym terminem Sprintu 3. Opisany tu his
 ## Raport: Sprint 3 (23–29.11)
 ### Zrobione
 - [x] S3-01–S3-10 — implementacja przygotowana 19.11 na `feat/sprint-3` i sprawdzona technicznie; wyniki testów opisano powyżej
-- [x] S3-11 — pierwsze wdrożenie Vercel/Supabase wykonane 16.11, produkcja z `main`
+- [x] S3-11 — pierwsze wdrożenie Vercel/Supabase wykonane 16.11; S3 opublikowany 19.11 z main, READY w obu projektach i migracje do V7 potwierdzone
 ### Publikacja i odbiór
 - Status commita, pushowania, scalenia i wdrożenia: checklista „Publikacja i odbiór S3”
 - Review zespołowe, test na rzeczywistym telefonie i pełny odbiór online są potwierdzane niezależnie
