@@ -25,6 +25,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker,dev}
       APP_FRONTEND_URL: ${APP_FRONTEND_URL:-http://localhost:3000}
+      APP_BOOTSTRAP_ADMIN_EMAIL: ${APP_BOOTSTRAP_ADMIN_EMAIL:-}
       APP_JWT_SECRET: ${APP_JWT_SECRET:-dev-jwt-secret-min-32-znakow-dla-hs256-aplikacja-trenerska}
       APP_MAIL_FROM: ${APP_MAIL_FROM:-no-reply@aplikacja.local}
       APP_ACCOUNT_EMAIL_CONFIRMATION_TTL: ${APP_ACCOUNT_EMAIL_CONFIRMATION_TTL:-24h}

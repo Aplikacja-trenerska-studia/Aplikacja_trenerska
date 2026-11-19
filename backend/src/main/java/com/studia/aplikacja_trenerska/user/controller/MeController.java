@@ -38,7 +38,7 @@ public class MeController {
 	@GetMapping("/me")
 	public UserResponse me(@AuthenticationPrincipal UserDetails principal) {
 		var user = userRepository.findByEmailIgnoreCase(principal.getUsername())
-				.filter(account -> account.isEnabled())
+				.filter(account -> account.isActive())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Zaloguj się ponownie"));
 		return userMapper.toResponse(user);
 	}

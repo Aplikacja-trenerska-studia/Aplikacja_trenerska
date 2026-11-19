@@ -44,7 +44,7 @@ class Sprint3MigrationIntegrationTests {
                 }
             }
             Flyway latest = Flyway.configure().dataSource(dataSource).locations("classpath:db/migration")
-                    .defaultSchema(schema).schemas(schema).load();
+                    .defaultSchema(schema).schemas(schema).target("7").load();
             assertThat(latest.migrate().migrationsExecuted).isEqualTo(3);
             assertThat(latest.migrate().migrationsExecuted).isZero();
             try (var connection = dataSource.getConnection()) {

@@ -140,7 +140,7 @@ public class ProgressService {
     private User owner(String email, boolean lock) {
         // Writes follow the same user-first lock order as plan edits and account deletion.
         var lookup = lock ? users.findForUpdateByEmail(email) : users.findByEmailIgnoreCase(email);
-        return lookup.filter(User::isEnabled)
+        return lookup.filter(User::isActive)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Zaloguj się ponownie"));
     }
 

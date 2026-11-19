@@ -8,6 +8,7 @@ BEGIN;
 SELECT id FROM users
 WHERE lower(email) = lower(trim(:'email'))
   AND enabled = TRUE
+  AND blocked = FALSE
   AND role IN ('USER', 'TRAINER')
   AND :'role' IN ('USER', 'TRAINER')
 FOR UPDATE

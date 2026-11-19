@@ -27,13 +27,14 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Could not start disposable PostgreSQL.' }
     $ready = $false
     for ($attempt = 0; $attempt -lt 30; $attempt++) {
-        docker exec $container pg_isready -U postgres 2>&1 | Out-Null
+        docker exec $container pg_isready -h 127.0.0.1 -U postgres 2>&1 | Out-Null
         if ($LASTEXITCODE -eq 0) { $ready = $true; break }
         Start-Sleep -Seconds 1
     }
     if (-not $ready) { throw 'PostgreSQL did not become ready.' }
 
-    foreach ($migration in @('V1__users_and_verification_tokens.sql', 'V2__account_security.sql')) {
+    # The operator script touches only account fields introduced by these migrations.
+    foreach ($migration in @('V1__users_and_verification_tokens.sql', 'V2__account_security.sql', 'V8__admin_accounts.sql')) {
         Invoke-TestSql (Get-Content -LiteralPath (Join-Path $repository "backend/src/main/resources/db/migration/$migration") -Raw) | Out-Null
     }
     Invoke-TestSql @'
@@ -49,6 +50,11 @@ INSERT INTO users (email, password_hash, display_name, role, enabled) VALUES
     Assert-AccountState 'TRAINER:1' # Repeating the operation does not log the account out again.
     Set-TestRole 'athlete@example.com' 'USER'
     Assert-AccountState 'USER:2'
+
+    Invoke-TestSql "UPDATE users SET blocked = TRUE WHERE email = 'athlete@example.com';" | Out-Null
+    Set-TestRole 'athlete@example.com' 'TRAINER' $false
+    Assert-AccountState 'USER:2'
+    Invoke-TestSql "UPDATE users SET blocked = FALSE WHERE email = 'athlete@example.com';" | Out-Null
 
     Set-TestRole 'athlete@example.com' 'ADMIN' $false
     Set-TestRole 'athlete@example.com' "TRAINER'; DELETE FROM users; --" $false

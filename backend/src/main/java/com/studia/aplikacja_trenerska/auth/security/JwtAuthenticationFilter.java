@@ -50,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			if (claims.getSubject() != null && userId != null && version != null
 					&& SecurityContextHolder.getContext().getAuthentication() == null) {
 				userRepository.findByEmailIgnoreCase(claims.getSubject())
-						.filter(user -> user.isEnabled() && user.getId().longValue() == userId.longValue()
+						.filter(user -> user.isActive() && user.getId().longValue() == userId.longValue()
 								&& user.getTokenVersion() == version.longValue())
 						.ifPresent(user -> {
 							var details = org.springframework.security.core.userdetails.User.builder()

@@ -61,6 +61,7 @@ public class SecurityConfig {
 								"/api/auth/confirm", "/api/auth/resend-confirmation", "/api/auth/forgot-password",
 								"/api/auth/reset-password", "/api/auth/confirm-deletion").permitAll()
 						.requestMatchers("/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**").permitAll()
+						.requestMatchers("/api/admin", "/api/admin/**").hasRole("ADMIN")
 						.requestMatchers("/api/trainer", "/api/trainer/**", "/api/groups", "/api/groups/**")
 						.hasRole("TRAINER")
 						.requestMatchers("/api/**").authenticated()

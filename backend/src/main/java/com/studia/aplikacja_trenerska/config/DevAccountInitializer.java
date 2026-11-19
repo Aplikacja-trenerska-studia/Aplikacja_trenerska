@@ -3,6 +3,7 @@ package com.studia.aplikacja_trenerska.config;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import com.studia.aplikacja_trenerska.user.repository.UserRepository;
 /** Creates a local test account only when the explicitly selected dev profile is active. */
 @Component
 @Profile("dev")
+@Order(0)
 public class DevAccountInitializer implements ApplicationRunner {
     private final UserRepository users;
     private final PasswordEncoder passwords;

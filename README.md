@@ -40,6 +40,8 @@ Po zalogowaniu dostępne są zakładki **Ćwiczenia** (`/cwiczenia`) i **Moje pl
 
 Lokalna TimescaleDB przechowuje wyniki i pomiary w prawdziwych hypertabelach. Supabase PostgreSQL 17 używa zgodnych zwykłych tabel z indeksami; API działa tak samo. Migracje V5–V7 wykonuje automatycznie Flyway. Instrukcja i kontrakty nowych modułów: [SPRINT3.md](docs/SPRINT3.md).
 
+**Panel administratora** (`/admin`) pozwala przeglądać i wyszukiwać konta, nadawać role oraz blokować i odblokowywać dostęp bez usuwania danych. Pokazuje także zbiorcze liczby kont, planów, zapisanych serii i grup. Pierwsze aktywne konto `ADMIN` inicjalizuje się jednorazowo zmienną backendu `APP_BOOTSTRAP_ADMIN_EMAIL`; kolejne role nadaje się w panelu. Migracja V8 zachowuje istniejące konta i dodaje osobną blokadę administracyjną. Instrukcja: [ADMIN.md](docs/ADMIN.md).
+
 ## Uruchomienie lokalne (dev)
 
 1. Baza i poczta: `docker compose up db mailpit` albo lokalny PostgreSQL i serwer SMTP.
@@ -79,7 +81,7 @@ npm test
 
 Opis API i scenariusze sprawdzenia aktywacji, resetu hasła i usuwania konta: [Konta użytkowników](docs/ACCOUNTS.md).
 
-Nadawanie i odbieranie roli trenera: [Role USER / TRAINER](docs/ACCOUNTS.md#role-user--trainer). Test skryptu operatora na jednorazowej bazie PostgreSQL: `pwsh -NoProfile -File tests/smoke-roles.ps1` (wymaga Dockera).
+Nadawanie i odbieranie ról w aplikacji oraz inicjalizacja pierwszego administratora: [Panel administratora](docs/ADMIN.md). Alternatywny skrypt operatora `USER` ↔ `TRAINER`: [Role USER / TRAINER](docs/ACCOUNTS.md#role-user--trainer). Test skryptu na jednorazowej bazie PostgreSQL: `pwsh -NoProfile -File tests/smoke-roles.ps1` (wymaga Dockera).
 
 Schemat ćwiczeń i planów (V3), katalog 48 ćwiczeń (V4), kaskady usuwania i model JPA: [WORKOUT_MODEL.md](docs/WORKOUT_MODEL.md). Pełne testy backendu na jednorazowym PostgreSQL 16 oraz sprawdzenie aktualizacji V2 → V3 → V4: `pwsh -NoProfile -File tests/test-workout-postgres.ps1` (wymaga Dockera, używa JDK 21 w kontenerze). Katalog dodaje się automatycznie przy starcie backendu przez Flyway.
 
@@ -110,6 +112,7 @@ Konfiguracja i [checklista wdrożenia](docs/DEPLOYMENT.md#5-sprawdź-wdrożenie)
 - [SPRINTY.md](docs/SPRINTY.md) — harmonogram  
 - [BACKEND_STRUCTURE.md](docs/BACKEND_STRUCTURE.md) — układ pakietów  
 - [ACCOUNTS.md](docs/ACCOUNTS.md) — konta, ochrona sesji, API i obsługa wiadomości
+- [ADMIN.md](docs/ADMIN.md) — panel administratora, role, blokady kont i jednorazowa inicjalizacja
 - [WORKOUT_MODEL.md](docs/WORKOUT_MODEL.md) — model ćwiczeń i planów, kolejność, integralność i testy
 - [EXERCISES_API.md](docs/EXERCISES_API.md) — odczyt katalogu ćwiczeń z filtrami, format odpowiedzi i autoryzacja
 - [WORKOUT_PLANS_API.md](docs/WORKOUT_PLANS_API.md) — CRUD własnych planów, dni i ćwiczeń, walidacja i testy uprawnień

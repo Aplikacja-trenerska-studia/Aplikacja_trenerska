@@ -31,6 +31,7 @@ Katalog `backend/src/main/java/com/studia/aplikacja_trenerska/`:
 │   └── repository/         # zapis/odczyt, właściciel planu, kolejność dzieci
 ├── progress/              # controller, service, dto, entity, repository: serie i pomiary
 ├── trainer/               # controller, service, dto, entity, repository: grupy i zgoda
+├── admin/                 # controller, service, dto, repository: konta, role, blokady, liczniki
 └── …
 ```
 
@@ -43,6 +44,7 @@ Migracje SQL Flyway: `backend/src/main/resources/db/migration/`. Migracja Java V
 - `auth/service` — rejestracja, logowanie, tokeny jednorazowe, reset hasła, potwierdzenie usunięcia i wysyłka e-maili.
 - `auth/entity` i `auth/repository` — tokeny z przeznaczeniem, datą ważności i powiązaniem z użytkownikiem; przechowywany jest skrót tokenu.
 - `auth/security` — weryfikacja JWT wraz z aktywnością konta, identyfikatorem użytkownika i wersją sesji.
+- `user/entity/User` — osobne znaczenia potwierdzenia e-maila (`enabled`) i blokady administracyjnej (`blocked`); aktywne konto wymaga obu warunków: potwierdzone i niezablokowane.
 - `user/controller` — profil i żądanie wysłania potwierdzenia usunięcia konta.
 - `config` — adres frontendu, nadawca wiadomości i czasy ważności tokenów, obok konfiguracji JWT i zabezpieczeń.
 
@@ -63,3 +65,13 @@ Szczegóły pól, ograniczeń, katalogu, pracy z kolekcjami i testów: [WORKOUT_
 `TrainerService` sprawdza rolę i własność grup, zarządza zaproszeniami oraz zgodą podopiecznego. Przypisanie głęboko kopiuje plan do konta odbiorcy. Trener wywołuje odczyt progresu dopiero po sprawdzeniu zaakceptowanego członkostwa. Blokady kont i członkostw serializują zapisy oraz współpracują z kaskadami usuwania konta.
 
 V5 dodaje wyniki i pomiary, V6 grupy/członkostwa/przypisania, a V7 konwertuje pomiary do hypertabel tylko w bazie udostępniającej TimescaleDB. Szczegóły API, bezpieczeństwa, limitów i scenariuszy w [SPRINT3.md](SPRINT3.md).
+
+## Administrator — rozszerzenie S3-12
+
+`AdminController` i reguły URL chronią `/api/admin/**` rolą `ADMIN`. `AdminService` ponownie sprawdza aktualną rolę i stan operatora, zwraca stronicowane DTO kont i zbiorcze liczniki oraz zmienia role i blokady. Wyszukiwanie traktuje metaznaki LIKE dosłownie. Odpowiedzi nie zawierają haseł ani tokenów i nie udostępniają cudzych planów lub historii pomiarów.
+
+`AdminAccessGuard` blokuje pojedynczy wiersz `admin_control` przed blokadami kont. Ten sam porządek obejmuje zmiany ról/blokad, pierwszą inicjalizację i `AccountService.confirmDeletion`, aby równoległe operacje nie odebrały ostatniego aktywnego dostępu administracyjnego. Faktyczna zmiana roli lub blokady unieważnia wcześniejsze JWT przez `token_version`. `AdminSql` kwalifikuje tabele zgodnie z `spring.jpa.properties.hibernate.default_schema`, zachowując prywatny schemat produkcyjny.
+
+`config/AdminBootstrapInitializer` jest uruchamiany przy starcie po migracjach. Opcjonalne `APP_BOOTSTRAP_ADMIN_EMAIL` może jednokrotnie podnieść istniejące, potwierdzone i niezablokowane konto do `ADMIN`; nie tworzy kont ani haseł. Stan wykonania jest zapisany w bazie, a kolejne starty i zmiany ustawienia nie nadają ról ponownie.
+
+V8 dodaje `users.blocked`, indeksy listy administracyjnej i singleton `admin_control`, zachowując dotychczasowe dane. `AdminMigrationIntegrationTests` sprawdza aktualizację V7 → V8, `AdminApiIntegrationTests` API i uprawnienia, a `AdminLifecycleIntegrationTests` przepływy kont, blokady, inicjalizację i ochronę ostatniego administratora. Opis panelu, konfiguracji i wyników testów: [ADMIN.md](ADMIN.md).
