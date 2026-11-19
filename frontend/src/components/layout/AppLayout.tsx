@@ -3,13 +3,13 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { Button } from '@/components/ui/button'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { clearSession } from '@/lib/auth-storage'
-import { ChartNoAxesCombined, ClipboardList, Dumbbell, Play, UserRound, UsersRound } from 'lucide-react'
+import { ChartNoAxesCombined, ClipboardList, Dumbbell, Play, ShieldCheck, UserRound, UsersRound } from 'lucide-react'
 
 export function AppLayout() {
   const navigate = useNavigate()
   const { loggedIn, user } = useAuthSession()
   const { pathname } = useLocation()
-  const trainingPage = ['/cwiczenia', '/plany', '/trening', '/progres', '/wspolpraca', '/trener'].some((path) => pathname === path || pathname.startsWith(`${path}/`))
+  const trainingPage = ['/cwiczenia', '/plany', '/trening', '/progres', '/wspolpraca', '/trener', '/admin'].some((path) => pathname === path || pathname.startsWith(`${path}/`))
 
   return (
     <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-col px-4 pb-6 pt-5 sm:px-6 sm:pt-8">
@@ -51,6 +51,7 @@ export function AppLayout() {
         { to: '/progres', label: 'Progres', Icon: ChartNoAxesCombined },
         { to: '/wspolpraca', label: 'Współpraca', Icon: UsersRound },
         ...(user?.role === 'TRAINER' ? [{ to: '/trener', label: 'Panel trenera', Icon: UsersRound }] : []),
+        ...(user?.role === 'ADMIN' ? [{ to: '/admin', label: 'Administracja', Icon: ShieldCheck }] : []),
       ].map(({ to, label, Icon }) => <NavLink key={to} to={to} className={({ isActive }) => `flex min-h-11 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${isActive ? 'border-primary/20 bg-primary/8 text-primary' : 'bg-card text-muted-foreground hover:bg-accent'}`}><Icon size={17} aria-hidden="true" />{label}</NavLink>)}</nav>}
       <main id="main-content" className={`mx-auto flex w-full flex-1 flex-col ${trainingPage ? 'max-w-3xl' : 'max-w-lg'}`}>
         <Outlet />

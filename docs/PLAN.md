@@ -116,6 +116,9 @@ Adres aplikacji: [aplikacja-trenerska.vercel.app](https://aplikacja-trenerska.ve
 - [x] Logowanie / wylogowanie (JWT + Spring Security)
 - [x] Role `USER`, `TRAINER`, `ADMIN` w modelu i obsłudze sesji; rejestracja tworzy konto `USER`
 - [x] Sposób nadawania roli `TRAINER` przez operatora (`tools/set-user-role.sql`), unieważnienie sesji po zmianie roli i testy rozróżniające uprawnienia ról (S2-04, 15.11.2026)
+- [x] Panel administratora `/admin`: wyszukiwanie i stronicowanie kont, zmiana ról `USER`/`TRAINER`/`ADMIN`, potwierdzenia zmian i zbiorcze podsumowanie (S3-12, rozszerzenie uzgodnione 19.11)
+- [x] Osobna blokada administracyjna `blocked`, unieważnianie JWT po zmianie roli/stanu i ochrona przed obejściem blokady przez aktywację lub reset hasła (V8)
+- [x] Jednorazowa inicjalizacja istniejącego konta administratora i ochrona ostatniego aktywnego administratora, również przy równoległym usuwaniu kont
 - [x] Przypomnienie hasła (reset przez e-mail/token)
 - [x] Usunięcie konta po ponownym podaniu hasła i potwierdzeniu przez e-mail
 - [x] Ochrona obecnych endpointów użytkownika przez JWT i `@PreAuthorize`, ochrona trasy `/profil`
@@ -126,6 +129,8 @@ Adres aplikacji: [aplikacja-trenerska.vercel.app](https://aplikacja-trenerska.ve
 Implementacja kont i kontrakt API: [ACCOUNTS.md](ACCOUNTS.md). Reset hasła unieważnia wcześniejsze JWT; jednorazowe tokeny mają przeznaczenie, termin ważności i skrót w bazie. Zaliczone sprawdzenia backendu na H2 i PostgreSQL 16: 111 testów (15 kont, 7 ról, 25 modelu planów, 3 katalogu, 19 API ćwiczeń, 41 API planów i uruchomienie kontekstu), w tym CRUD i izolacja własnych planów, walidacja oraz usuwanie konta z planem przy zachowaniu katalogu. Sprawdzono także aktualizacje V2 → V3 → V4 z istniejącymi danymi. Wcześniej sprawdzono 4 testy pomocniczych funkcji frontendu, build i lint frontendu oraz przepływy kont przez nginx z PostgreSQL i rzeczywistą wysyłką SMTP do Mailpit (`tests/smoke-accounts.mjs`). Potwierdzono również obejście crasha Brave podczas wpisywania nicku (`autocomplete="off"`).
 
 Mailpit przechwytuje wiadomości lokalnie. Produkcja korzysta z `APP_MAIL_MODE=log`: linki trafiają do prywatnych logów API, wiadomości nie są wysyłane. Rzeczywista wysyłka wymaga zewnętrznego SMTP; wybór transportu nie zmienia interfejsu użytkownika. Pełne przepływy kont, planów i S3 sprawdzono lokalnie; ich powtórzenie online na koncie testowym pozostaje na checkliście odbioru S3-11. Weryfikacja z 19.11: po 216 testów backendu bez błędów na PostgreSQL 17 i TimescaleDB/PostgreSQL 16; na H2 215 zaliczonych i 1 celowo pominięty test wymagający PostgreSQL. Frontend: 27 testów, build i lint zaliczone. Szczegóły i powtarzalne polecenia: [SPRINT3.md](SPRINT3.md).
+
+Dodatkowe rozszerzenie **S3-12 — administrator** przygotowano i sprawdzono lokalnie 19.11. Aktualny zestaw po tym rozszerzeniu obejmuje **262 testy backendu** zaliczone na PostgreSQL 17 i TimescaleDB/PostgreSQL 16 (H2: 260 zaliczonych i 2 celowo pominięte) oraz **33 testy frontendu**, build i lint. Aktualizacja V7 → V8 zachowuje konta, wersje sesji i dane treningowe, a pełny test UI sprawdził zmiany ról, blokady i zachowanie sesji na komputerze oraz w widoku mobilnym. Wdrożenie rozszerzenia i pierwsze uprawnienia produkcyjne są rozliczane osobno w [checkliście S3-12](SPRINTY.md#rozszerzenie-s3-12--administrator-19112026). Instrukcja panelu i jednorazowej inicjalizacji: [ADMIN.md](ADMIN.md).
 
 ### M2. Moduł użytkownika — plany treningowe (P1)
 

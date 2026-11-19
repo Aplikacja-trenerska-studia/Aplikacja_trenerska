@@ -209,6 +209,7 @@ Kontrakt endpointów kont i scenariusze weryfikacji: [ACCOUNTS.md](ACCOUNTS.md).
 | S3-09 | Trener: historia, pomiary i wykresy zaakceptowanego podopiecznego | BE-1 / FE-2 | | ✅ podgląd i odebranie dostępu po opuszczeniu grupy sprawdzone |
 | S3-10 | Test przepływu: rejestracja → plan → wynik → akceptacja zaproszenia → przypisanie planu | BE-2 | | ✅ `tests/smoke-sprint3-ui.mjs` przeszedł na pełnym stacku Docker |
 | S3-11 | Vercel/Supabase, produkcja z `main`, migracja konta i transport poczty `log` | OPS | | ✅ infrastruktura od 16.11; S3 wdrożony 19.11, oba projekty READY, migracje Supabase do V7 potwierdzone; pełny odbiór online osobno |
+| S3-12 | Panel administratora: konta, role, blokady, podsumowanie i jednorazowa inicjalizacja; V8 | BE-1 / FE-1 / OPS | | ✅ dodatkowo uzgodnione 19.11, technicznie wykonane i sprawdzone lokalnie; publikacja i pierwsze uprawnienia wymagają osobnego potwierdzenia |
 
 
 **Scenariusz:** użytkownik zapisuje trening i widzi wykres; trener tworzy grupę, podopieczny akceptuje zaproszenie, a trener przypisuje mu plan.
@@ -232,6 +233,20 @@ Implementację przygotowano na `feat/sprint-3` 19.11.2026. Testy backendu, front
 - [x] **Migracje:** aktualizacja V4 → V7 zachowuje istniejące konto i plan; ponowne uruchomienie wykonuje 0 migracji. Na TimescaleDB potwierdzono dwie rzeczywiste hypertabele. Powtarzalny test: `tests/test-sprint3-databases.ps1`.
 - [x] **Frontend:** 27 testów, build i lint zaliczone. Pełny przepływ UI przeszedł bez błędów JavaScript i poziomego przewijania przy 1280 × 900 oraz 375 × 812. Zrzuty obejrzano; poprawiono i ponownie sprawdzono czytelność podpisów osi wykresów (12 px).
 - [x] **Profil produkcyjny lokalnie:** izolowany `tests/smoke-deployment.ps1` przeszedł z prywatnym schematem, migracjami V1–V7, SMTP, `PORT`, CORS i ochroną tras. Nie oznacza to zastosowania zmian w produkcyjnej bazie Supabase.
+
+### Rozszerzenie S3-12 — administrator (19.11.2026)
+
+Zakres uzgodniony dodatkowo po wykonaniu S3-01–S3-11: lista i wyszukiwanie użytkowników, role `USER`/`TRAINER`/`ADMIN`, blokowanie/odblokowywanie oraz zbiorcze liczby kont, planów, zapisanych serii i grup. Nie obejmuje edycji katalogu ćwiczeń. Harmonogram Sprintu 3 pozostaje **23–29.11**. Instrukcja pierwszej inicjalizacji, kontrakt API i powtarzalne testy: [ADMIN.md](ADMIN.md).
+
+- [x] Chroniony panel `/admin` i API `/api/admin/**`, wyszukiwanie, filtry, stronicowanie, potwierdzenia zmian i obsługa błędów.
+- [x] Zmiany ról i blokad unieważniają JWT. `blocked` jest osobne od potwierdzenia e-maila; aktywacja i reset nie omijają blokady, a odblokowanie nie aktywuje oczekującego konta.
+- [x] Jednorazowa inicjalizacja istniejącego, potwierdzonego konta przez `APP_BOOTSTRAP_ADMIN_EMAIL`, bez domyślnego hasła i bez rzeczywistego adresu w kodzie. Ochrona ostatniego aktywnego administratora obejmuje równoległe zmiany oraz usuwanie własnego konta.
+- [x] V8 i aktualizacja V7 → V8 zachowują istniejące konto, skrót hasła, wersję sesji, wyniki, pomiary i grupy. Migracja sama nie nadaje roli `ADMIN`.
+- [x] Cały zestaw **262 testów backendu** przeszedł bez błędów na PostgreSQL 17 i TimescaleDB/PostgreSQL 16. H2: 260 zaliczonych, 2 celowo pominięte testy rzeczywistego PostgreSQL.
+- [x] **33 testy frontendu**, build i lint przeszły. `tests/smoke-admin-ui.mjs` sprawdził zmiany ról `USER` → `TRAINER` → `ADMIN` → `USER`, blokadę/odblokowanie, JWT, anulowanie oraz ponowienie po `503`.
+- [x] Widoki 1280 × 900 i 375 × 812 sprawdzone bez przewijania poziomego i błędów JavaScript; zrzuty obejrzano. Profil produkcyjny lokalnie przeszedł test V1–V8, prywatnego schematu, SMTP, `PORT` i CORS. Skrypt operatora sprawdzono również dla zablokowanego konta.
+- [ ] Opublikować rozszerzenie, potwierdzić migrację V8 w Supabase i jednorazowo zainicjalizować pierwszego administratora. Nie nadano jeszcze uprawnień produkcyjnych w ramach opisanych sprawdzeń lokalnych.
+- [ ] Potwierdzić panel i operacje na zalogowanym koncie administratora online; zespołowe review i test na rzeczywistym telefonie pozostają odrębnymi kryteriami odbioru.
 
 ### Publikacja i odbiór S3
 

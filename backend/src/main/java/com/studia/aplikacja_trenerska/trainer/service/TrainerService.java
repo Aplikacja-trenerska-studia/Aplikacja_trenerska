@@ -77,13 +77,13 @@ public class TrainerService {
         User trainer = trainer(email, false);
         ownedGroup(trainer, groupId, false);
         Long inviterId = trainer.getId();
-        User trainee = users.findByEmailIgnoreCase(request.email().strip()).filter(User::isEnabled)
+        User trainee = users.findByEmailIgnoreCase(request.email().strip()).filter(User::isActive)
                 .filter(user -> user.getRole() == UserRole.USER && !user.getId().equals(inviterId))
                 .orElseThrow(() -> missing("Nie znaleziono aktywnego konta podopiecznego"));
         lockUsers(Stream.of(trainer.getId(), trainee.getId()).toList());
         // Refresh validates current role/enabled flags after acquiring the user locks.
         trainer = trainer(email, false);
-        trainee = users.findById(trainee.getId()).filter(User::isEnabled).filter(user -> user.getRole() == UserRole.USER)
+        trainee = users.findById(trainee.getId()).filter(User::isActive).filter(user -> user.getRole() == UserRole.USER)
                 .orElseThrow(() -> missing("Nie znaleziono aktywnego konta podopiecznego"));
         TrainingGroup group = ownedGroup(trainer, groupId, true);
         if (members.findById(new GroupMemberId(groupId, trainee.getId())).isPresent()) {
@@ -158,7 +158,7 @@ public class TrainerService {
         lockedMembers.forEach(member -> entityManager.refresh(member, LockModeType.PESSIMISTIC_WRITE));
         List<GroupMember> recipients = lockedMembers.stream().filter(GroupMember::isAccepted)
                 .filter(member -> request.userId() == null || member.getUserId().equals(request.userId()))
-                .filter(member -> users.findById(member.getUserId()).map(User::isEnabled).orElse(false)).toList();
+                .filter(member -> users.findById(member.getUserId()).map(User::isActive).orElse(false)).toList();
         if (request.userId() != null && recipients.isEmpty()) throw missing("Nie znaleziono aktywnego podopiecznego w tej grupie");
         if (recipients.stream().anyMatch(member -> !candidateIds.contains(member.getUserId()))) {
             throw conflict("Skład grupy zmienił się. Odśwież grupę i ponów przypisanie planu");
@@ -189,7 +189,7 @@ public class TrainerService {
     }
 
     private AssignmentResponse assignCopy(TrainingGroup group, User trainer, GroupMember member, WorkoutPlan source) {
-        User trainee = users.findById(member.getUserId()).filter(User::isEnabled)
+        User trainee = users.findById(member.getUserId()).filter(User::isActive)
                 .orElseThrow(() -> missing("Nie znaleziono podopiecznego"));
         PlanAssignment assignment = assignments.findByGroupIdAndUserIdAndSourcePlanId(
                 group.getId(), trainee.getId(), source.getId()).orElseGet(PlanAssignment::new);
@@ -246,7 +246,7 @@ public class TrainerService {
 
     private GroupMember acceptedMember(Long groupId, Long userId) {
         GroupMember member = member(groupId, userId);
-        if (!member.isAccepted() || !users.findById(userId).map(User::isEnabled).orElse(false)) {
+        if (!member.isAccepted() || !users.findById(userId).map(User::isActive).orElse(false)) {
             throw missing("Nie znaleziono aktywnego podopiecznego w tej grupie");
         }
         return member;
@@ -282,12 +282,12 @@ public class TrainerService {
     }
 
     private boolean activeTrainer(Long userId) {
-        return users.findById(userId).filter(User::isEnabled).filter(user -> user.getRole() == UserRole.TRAINER).isPresent();
+        return users.findById(userId).filter(User::isActive).filter(user -> user.getRole() == UserRole.TRAINER).isPresent();
     }
 
     private User currentUser(String email, boolean lock) {
         var result = lock ? users.findForUpdateByEmail(email) : users.findByEmailIgnoreCase(email);
-        return result.filter(User::isEnabled)
+        return result.filter(User::isActive)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Zaloguj się ponownie"));
     }
 

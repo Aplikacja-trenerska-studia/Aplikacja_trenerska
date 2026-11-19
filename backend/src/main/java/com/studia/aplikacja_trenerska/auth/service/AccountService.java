@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.studia.aplikacja_trenerska.auth.entity.VerificationToken;
 import com.studia.aplikacja_trenerska.auth.entity.VerificationTokenType;
 import com.studia.aplikacja_trenerska.auth.repository.VerificationTokenRepository;
+import com.studia.aplikacja_trenerska.admin.service.AdminAccessGuard;
 import com.studia.aplikacja_trenerska.config.AccountProperties;
 import com.studia.aplikacja_trenerska.user.entity.User;
 import com.studia.aplikacja_trenerska.user.repository.UserRepository;
@@ -34,14 +35,17 @@ public class AccountService {
     private final PasswordEncoder passwordEncoder;
     private final AccountMailService mailService;
     private final AccountProperties properties;
+    private final AdminAccessGuard adminAccessGuard;
 
     public AccountService(VerificationTokenRepository tokens, UserRepository users,
-            PasswordEncoder passwordEncoder, AccountMailService mailService, AccountProperties properties) {
+            PasswordEncoder passwordEncoder, AccountMailService mailService, AccountProperties properties,
+            AdminAccessGuard adminAccessGuard) {
         this.tokens = tokens;
         this.users = users;
         this.passwordEncoder = passwordEncoder;
         this.mailService = mailService;
         this.properties = properties;
+        this.adminAccessGuard = adminAccessGuard;
     }
 
     public void sendConfirmation(User user) {
@@ -49,12 +53,12 @@ public class AccountService {
     }
 
     public void resendConfirmation(String email) {
-        users.findForUpdateByEmail(normalizeEmail(email)).filter(user -> !user.isEnabled())
+        users.findForUpdateByEmail(normalizeEmail(email)).filter(user -> !user.isEnabled() && !user.isBlocked())
                 .ifPresent(this::sendConfirmation);
     }
 
     public void forgotPassword(String email) {
-        users.findForUpdateByEmail(normalizeEmail(email)).filter(User::isEnabled)
+        users.findForUpdateByEmail(normalizeEmail(email)).filter(User::isActive)
                 .ifPresent(user -> issue(user, VerificationTokenType.PASSWORD_RESET, properties.passwordResetTtl()));
     }
 
@@ -67,7 +71,7 @@ public class AccountService {
     public void resetPassword(String rawToken, String password) {
         validatePasswordBytes(password);
         User user = consume(rawToken, VerificationTokenType.PASSWORD_RESET);
-        if (!user.isEnabled()) {
+        if (!user.isActive()) {
             throw invalidToken();
         }
         user.setPasswordHash(passwordEncoder.encode(password));
@@ -77,7 +81,7 @@ public class AccountService {
 
     public void requestDeletion(String email, String password) {
         User user = users.findForUpdateByEmail(email)
-                .filter(User::isEnabled)
+                .filter(User::isActive)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Zaloguj się ponownie"));
         validatePasswordBytes(password);
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
@@ -87,7 +91,10 @@ public class AccountService {
     }
 
     public void confirmDeletion(String rawToken) {
+        // Administrative changes and deletions share the guard-first lock order.
+        adminAccessGuard.lock();
         User user = consume(rawToken, VerificationTokenType.ACCOUNT_DELETION);
+        adminAccessGuard.ensureMayDelete(user);
         tokens.deleteByUserId(user.getId());
         // Foreign keys remove owned plans, results, metrics and coaching relationships.
         // Other users' independent plan copies and the exercise catalog remain.

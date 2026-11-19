@@ -79,7 +79,7 @@ public class WorkoutPlanService {
     private User owner(String email, boolean lock) {
         // Match account deletion/reset locking order: user first, then its plan hierarchy.
         var result = lock ? users.findForUpdateByEmail(email) : users.findByEmailIgnoreCase(email);
-        return result.filter(User::isEnabled)
+        return result.filter(User::isActive)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Zaloguj się ponownie"));
     }
 

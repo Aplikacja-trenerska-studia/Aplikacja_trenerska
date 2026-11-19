@@ -69,7 +69,7 @@ Zapisy w nawiasach klamrowych w tabeli oznaczają nazwy pól, a nie gotowy JSON 
 
 Rejestracja zawsze tworzy `USER`; pole `role` przesłane przez klienta nie nadaje uprawnień. Obie role mogą korzystać z profilu i usuwania własnego konta. Ścieżki `/api/trainer`, `/api/trainer/**`, `/api/groups` i `/api/groups/**` są zarezerwowane dla `TRAINER`; kontroler grup dodatkowo stosuje `@PreAuthorize("hasRole('TRAINER')")`. Trener zarządza wyłącznie własnymi grupami, a dostęp do progresu podopiecznego wymaga zaakceptowanego członkostwa. Odrzucenie zaproszenia, opuszczenie grupy lub usunięcie członkostwa odbiera ten dostęp. Brak prawidłowej sesji daje `401`, brak wymaganej roli — `403`.
 
-Rolę nadaje lub odbiera operator mający dostęp do bazy, po sprawdzeniu tożsamości i uprawnienia danej osoby do pełnienia funkcji trenera. Nie ma publicznego endpointu zmiany roli ani możliwości samodzielnego awansu z profilu. Z katalogu głównego repozytorium, przy uruchomionej bazie Compose:
+Rolę nadaje lub odbiera administrator w panelu `/admin`, po sprawdzeniu tożsamości i uprawnienia danej osoby do pełnienia funkcji trenera. Nie ma publicznego endpointu zmiany roli ani możliwości samodzielnego awansu z profilu. Pierwsze konto administratora inicjalizuje operator zgodnie z [ADMIN.md](ADMIN.md). Operator mający dostęp do bazy może również użyć poniższego skryptu z katalogu głównego repozytorium, przy uruchomionej bazie Compose:
 
 ```powershell
 # Nadaj TRAINER istniejącemu, aktywowanemu kontu.
@@ -82,11 +82,14 @@ Get-Content -Raw tools/set-user-role.sql | docker compose exec -T db psql -X -U 
 
 Skrypt blokuje rekord na czas transakcji, dopuszcza wyłącznie przejścia `USER` ↔ `TRAINER` i odmawia zmiany nieistniejących lub nieaktywnych kont oraz kont `ADMIN`. Każda faktyczna zmiana zwiększa `token_version`: wcześniejsze JWT przestają działać i użytkownik musi ponownie się zalogować. Powtórzenie tej samej roli niczego nie zmienia. Wynik pokazuje ID, e-mail, rolę i wersję sesji do sprawdzenia przez operatora. Parametry są cytowane przez psql; skrypt należy uruchamiać z `-X`, `ON_ERROR_STOP=1` i `-f -`, jak w przykładzie.
 
-Rola w JWT służy jako informacja dla klienta. Backend ustala uprawnienia na podstawie aktualnej roli z bazy przy każdym żądaniu. Istniejący `ADMIN` nie dziedziczy automatycznie uprawnień trenera; panel administracyjny pozostaje poza S2.
+Rola w JWT służy jako informacja dla klienta. Backend ustala uprawnienia na podstawie aktualnej roli z bazy przy każdym żądaniu. `ADMIN` ma dostęp do `/api/admin/**`, ale nie dziedziczy automatycznie uprawnień trenera. Panel administracyjny jest rozszerzeniem po pierwotnym zakresie S2/S3; szczegóły uprawnień i pierwszej inicjalizacji są w [ADMIN.md](ADMIN.md).
 
 Testy ról: `RoleSecurityIntegrationTests` sprawdzają prawdziwe JWT, reguły URL i `@PreAuthorize` na kontrolerze istniejącym wyłącznie w testach. Skrypt operatora można sprawdzić poleceniem `pwsh -NoProfile -File tests/smoke-roles.ps1`. Test wymaga Dockera, uruchamia jednorazową bazę PostgreSQL 16 bez publikowania portów i usuwa kontener po zakończeniu; nie korzysta z bazy aplikacji.
 
 ## Zabezpieczenia
+
+- Migracja V8 rozdziela potwierdzenie e-maila (`enabled`) od blokady administracyjnej (`blocked`). Blokada uniemożliwia logowanie i dostęp JWT, zachowując dane konta. Odblokowanie nie aktywuje niepotwierdzonego konta, a potwierdzenie e-maila lub reset hasła nie zdejmują blokady.
+- Zmiana roli oraz faktyczna zmiana blokady unieważniają wcześniejsze JWT. Ostatni aktywny administrator jest chroniony także podczas potwierdzania usunięcia konta; bez drugiego aktywnego administratora ta operacja zwraca `409` i nie zużywa tokenu.
 
 - Tokeny z wiadomości mają określone przeznaczenie i termin ważności. Nie można użyć tokenu aktywacji do zmiany hasła lub usunięcia konta.
 - Domyślnie aktywacja jest ważna 24 godziny, reset hasła 30 minut, a potwierdzenie usunięcia 30 minut.

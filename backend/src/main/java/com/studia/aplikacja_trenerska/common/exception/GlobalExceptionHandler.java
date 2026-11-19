@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -60,6 +61,12 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<Map<String, String>> handleDisabledAccount() {
 		return ResponseEntity.status(HttpStatus.FORBIDDEN)
 				.body(Map.of("message", "Potwierdź adres e-mail, aby aktywować konto. Możesz poprosić o nowy link."));
+	}
+
+	@ExceptionHandler(LockedException.class)
+	public ResponseEntity<Map<String, String>> handleBlockedAccount() {
+		return ResponseEntity.status(HttpStatus.FORBIDDEN)
+				.body(Map.of("message", "Konto zostało zablokowane. Skontaktuj się z administratorem."));
 	}
 
 	@ExceptionHandler(DataIntegrityViolationException.class)

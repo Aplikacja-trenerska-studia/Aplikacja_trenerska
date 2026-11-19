@@ -25,6 +25,7 @@ public class AppUserDetailsService implements UserDetailsService {
 				.username(user.getEmail())
 				.password(user.getPasswordHash())
 				.disabled(!user.isEnabled())
+				.accountLocked(user.isBlocked())
 				.authorities("ROLE_" + user.getRole().name())
 				.build();
 	}

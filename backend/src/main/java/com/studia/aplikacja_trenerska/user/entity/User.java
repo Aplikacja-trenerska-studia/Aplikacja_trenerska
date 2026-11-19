@@ -35,6 +35,9 @@ public class User {
 	@Column(nullable = false)
 	private boolean enabled = true;
 
+	@Column(nullable = false)
+	private boolean blocked;
+
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt = Instant.now();
 
@@ -95,6 +98,18 @@ public class User {
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public boolean isBlocked() {
+		return blocked;
+	}
+
+	public void setBlocked(boolean blocked) {
+		this.blocked = blocked;
+	}
+
+	public boolean isActive() {
+		return enabled && !blocked;
 	}
 
 	public Instant getCreatedAt() {
