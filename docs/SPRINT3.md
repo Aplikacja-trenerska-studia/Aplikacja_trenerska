@@ -82,7 +82,7 @@ Usunięcie grupy lub członkostwa usuwa metadane przypisania, zachowując kopię
 - **V6**: `training_groups`, `group_members`, `plan_assignments`, status zgody, indeksy i kaskady.
 - **V7** (migracja Java w `backend/src/main/java/db/migration`): automatyczna konwersja tabel pomiarów do hypertabel, jeśli PostgreSQL udostępnia TimescaleDB. W H2 i Supabase PG17 pomija konwersję. W obu wariantach funkcje aplikacji są takie same.
 
-Flyway wykonuje migracje przy starcie backendu. Nie uruchamiaj ich ręcznie w Supabase i nie zmieniaj już zastosowanych wersji. Nowe tabele wymagają następnego numeru **V8**. Zmiany V5–V7 nie usuwają istniejących kont ani planów.
+Flyway wykonuje migracje przy starcie backendu. Nie uruchamiaj ich ręcznie w Supabase i nie zmieniaj już zastosowanych wersji. **V8** zajmuje panel administratora i blokady kont ([ADMIN.md](ADMIN.md)); następna wolna wersja to **V9**. Zmiany V5–V8 zachowują istniejące konta i plany.
 
 ## Weryfikacja
 
