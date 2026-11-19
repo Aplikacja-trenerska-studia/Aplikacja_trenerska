@@ -2,7 +2,9 @@
 
 ## Stan wdrożenia — 19 listopada 2026
 
-Wdrożenie działa publicznie. Zadanie **S3-11** należy do **Sprintu 3 (23–29 listopada)**; pierwsze wdrożenie wykonano z wyprzedzeniem **16 listopada 2026**, a progres i moduł trenera opublikowano **19 listopada**. Oba projekty Vercel śledzą produkcyjny branch `main`; sprawdzono kod po scaleniu [`f40d008`](https://github.com/Aplikacja-trenerska-studia/Aplikacja_trenerska/commit/f40d008a4639c8658cf8b181dc8e1ab6eed6d1ce).
+Wdrożenie działa publicznie. Zadanie **S3-11** należy do **Sprintu 3 (23–29 listopada)**; pierwsze wdrożenie wykonano z wyprzedzeniem **16 listopada 2026**, a progres, moduł trenera oraz panel administratora opublikowano **19 listopada**. Oba projekty Vercel śledzą produkcyjny branch `main`; najnowszy sprawdzony kod aplikacji to scalenie [`ecacd1d`](https://github.com/Aplikacja-trenerska-studia/Aplikacja_trenerska/commit/ecacd1dd448c21d71e52f26c8ecf1037eeb1c730).
+
+**Panel administratora — 19.11, godz. 19:08:** frontend i API osiągnęły `READY` dla `ecacd1d`. Logi Flyway potwierdziły V7 → V8 (jedna migracja, 0,110 s) i kolejny start z wersją 8 bez nowych migracji. Inicjalizator nadał pierwszemu wskazanemu kontu `ADMIN`; jednorazowa zmienna `APP_BOOTSTRAP_ADMIN_EMAIL` została następnie usunięta z konfiguracji produkcyjnej. Adres konta nie jest zapisany w repozytorium. API jest `UP`, `/admin` zwraca `200`, a anonimowe żądania listy użytkowników i podsumowania są odrzucane (`401`). Weryfikacja nadania roli opiera się na poprawnym starcie i logu transakcyjnego inicjalizatora; nie logowano się na prywatne konto użytkownika. Kolejny start bez zmiennej nie zmienia zapisanej roli. Instrukcja i zakres panelu: [ADMIN.md](ADMIN.md).
 
 **Aktualizacja z 19.11.2026:** `feat/sprint-3` wypchnięto i scalono commitem merge. Frontend i backend Vercela osiągnęły `READY` dla tego samego kodu. Logi Flyway potwierdzają aktualizację Supabase ze schematu V4 do V7: trzy migracje wykonano poprawnie o 18:38 czasu polskiego (0,472 s), a kolejny start rozpoznał wersję 7 bez ponawiania migracji. Na Supabase PostgreSQL 17 V7 pozostawia zwykłe tabele z indeksami; hypertabele działają w lokalnym TimescaleDB. Publikację rozlicza [checklista S3](SPRINTY.md#publikacja-i-odbiór-s3); pełny opis funkcji: [SPRINT3.md](SPRINT3.md).
 
@@ -12,7 +14,7 @@ Sprawdzone wdrożenia kodu: API `dpl_FZ3j8aACrkDVQ6dJqVdHUXAS37RP`, frontend `dp
 |---|---|
 | Frontend | [aplikacja-trenerska.vercel.app](https://aplikacja-trenerska.vercel.app), projekt `aplikacja-trenerska-frontend` |
 | Backend | [aplikacja-trenerska-api.vercel.app](https://aplikacja-trenerska-api.vercel.app), Java 21 / Container Runtime, region `dub1` |
-| Baza | Supabase PostgreSQL 17, `eu-west-1`, prywatny schemat `training_app`, migracje V1–V7 i katalog 48 ćwiczeń |
+| Baza | Supabase PostgreSQL 17, `eu-west-1`, prywatny schemat `training_app`, migracje V1–V8 i katalog 48 ćwiczeń |
 
 Konfiguracja poczty w ostatnim sprawdzonym wdrożeniu używa `APP_MAIL_MODE=log`. Ten transport zapisuje linki w prywatnych logach zamiast dostarczać wiadomości. Docelowa wysyłka do skrzynek wymaga ustawień SMTP opisanych poniżej. Interfejs kont jest wspólny dla wszystkich transportów poczty.
 
@@ -147,9 +149,9 @@ Lokalne Vite i Docker zachowują dotychczasowe działanie: przy pustym `VITE_API
 ## 5. Sprawdź wdrożenie
 
 - [x] Oba projekty działają pod publicznymi adresami HTTPS i wdrażają `main`.
-- [x] Backend działa z profilem `prod`; `/api/health` zwraca `UP`. V5–V7 wykonano 19.11, a kolejny start potwierdził aktualny schemat V7. Profil produkcyjny nie tworzy konta developerskiego.
+- [x] Backend działa z profilem `prod`; `/api/health` zwraca `UP`. V5–V7 oraz późniejszą V8 wykonano 19.11; kolejne starty potwierdzają aktualny schemat bez ponawiania migracji. Profil produkcyjny nie tworzy konta developerskiego.
 - [x] Zapytanie logowania losowym nieistniejącym kontem zwraca `401` po odczycie bazy Supabase.
-- [x] Bez JWT endpointy profilu, ćwiczeń i planów zwracają `401`. Po aktualizacji 19.11 sprawdzono również wyniki, pomiary, grupy, zaproszenia i przypisania (`401`).
+- [x] Bez JWT endpointy profilu, ćwiczeń i planów zwracają `401`. Po aktualizacji 19.11 sprawdzono również wyniki, pomiary, grupy, zaproszenia, przypisania oraz endpointy administratora (`401`).
 - [x] CORS dopuszcza adres frontendu, a żądanie z obcego originu odrzuca kodem `403`.
 - [x] Frontend zwraca `200` dla `/`, `/trening`, `/progres`, `/trener`, `/wspolpraca`, `/rejestracja`. Paczka zawiera moduły S3 i używa standardowych komunikatów kont.
 - [x] W bazie jest 48 ćwiczeń oraz przeniesione konto `USER`; kopie danych pozostają prywatne.
@@ -165,7 +167,7 @@ Weryfikację linków i usuwania wykonuj wyłącznie na własnym koncie testowym,
 
 ## Zmiany bazy w zespole
 
-1. Dodaj kolejny plik w `backend/src/main/resources/db/migration`, np. `V8__add_calendar.sql`. Uzgodnij numer z zespołem, aby dwa PR-y nie dodały różnych migracji V8. Zastosowanych migracji SQL i Java nie edytuj — poprawka dostaje nowy numer. V5–V7 są już zajęte przez Sprint 3. Flyway zapisuje wykonane wersje i ich sumy kontrolne. [Migracje wersjonowane](https://documentation.red-gate.com/fd/versioned-migrations-273973333.html).
+1. Dodaj kolejny plik w `backend/src/main/resources/db/migration`, np. `V9__add_calendar.sql`. Uzgodnij numer z zespołem, aby dwa PR-y nie dodały różnych migracji V9. Zastosowanych migracji SQL i Java nie edytuj — poprawka dostaje nowy numer. V5–V7 obsługują progres i trenera, a V8 administratora i blokady kont. Flyway zapisuje wykonane wersje i ich sumy kontrolne. [Migracje wersjonowane](https://documentation.red-gate.com/fd/versioned-migrations-273973333.html).
 2. W migracji dodaj `CREATE TABLE`, `ALTER TABLE` lub indeksy oraz odpowiednie zmiany encji i kodu. Nie wpisuj na sztywno schematu `public`: produkcyjny schemat `training_app` ustawia konfiguracja. Hibernate ma `ddl-auto=validate`, więc sam nie tworzy tabel.
 3. Sprawdź zmianę lokalnie w Dockerze i testach, również na bazie z istniejącymi danymi. Zmiana schematu i korzystający z niej kod powinny znaleźć się w tym samym PR.
 4. Po scaleniu do `main` Vercel wdraża backend. Przy jego starcie Flyway wykonuje brakujące migracje w Supabase, przez połączenie sesyjne na porcie `5432`. Nie trzeba ręcznie tworzyć tabel w panelu. Po wdrożeniu sprawdź logi Flyway i `/api/health`; błąd migracji zatrzymuje start aplikacji.
@@ -206,4 +208,4 @@ Test profilu produkcyjnego z katalogu głównego repozytorium (PowerShell 7 i ur
 pwsh -NoProfile -File tests/smoke-deployment.ps1
 ```
 
-Skrypt buduje backend i tworzy własne tymczasowe kontenery PostgreSQL oraz Mailpit. Sprawdza port wskazany przez hosting, schemat `training_app`, migracje V1–V7, katalog, CORS, brak konta developerskiego, wyłączenie Swaggera i przepływ konta/planu przez SMTP. Po zakończeniu usuwa własne kontenery, sieć i obraz. Nie korzysta z istniejącej bazy Compose ani ze zdalnych kont. Połączenia JDBC/SMTP w tym izolowanym teście są celowo lokalne i bez TLS; test nie potwierdza połączenia TLS z rzeczywistym Supabase lub dostawcą SMTP. Nową wersję sprawdzono tym skryptem 19.11.2026; testy progresu i trenera opisuje [SPRINT3.md](SPRINT3.md).
+Skrypt buduje backend i tworzy własne tymczasowe kontenery PostgreSQL oraz Mailpit. Sprawdza port wskazany przez hosting, schemat `training_app`, migracje V1–V8, katalog, CORS, brak konta developerskiego, wyłączenie Swaggera i przepływ konta/planu przez SMTP. Po zakończeniu usuwa własne kontenery, sieć i obraz. Nie korzysta z istniejącej bazy Compose ani ze zdalnych kont. Połączenia JDBC/SMTP w tym izolowanym teście są celowo lokalne i bez TLS; test nie potwierdza połączenia TLS z rzeczywistym Supabase lub dostawcą SMTP. Nową wersję sprawdzono tym skryptem 19.11.2026; testy progresu i trenera opisuje [SPRINT3.md](SPRINT3.md).

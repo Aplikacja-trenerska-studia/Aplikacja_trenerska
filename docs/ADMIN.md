@@ -2,7 +2,7 @@
 
 Panel `/admin` jest dostępny dla aktywnego, niezablokowanego konta z rolą `ADMIN`. Backend sprawdza aktualną rolę i stan konta przy każdym żądaniu; sam link lub rola zapisana w przeglądarce nie nadają uprawnień.
 
-Rozszerzenie **S3-12** przygotowano i sprawdzono lokalnie 19.11.2026. Poniższe wyniki testów nie oznaczają jeszcze publikacji nowego kodu ani nadania pierwszych uprawnień w produkcyjnej bazie. Publikację i inicjalizację rozlicza osobno [checklista sprintu](SPRINTY.md#rozszerzenie-s3-12--administrator-19112026).
+Rozszerzenie **S3-12** przygotowano, sprawdzono lokalnie i opublikowano 19.11.2026. Oba projekty Vercela osiągnęły `READY` dla kodu scalonego do `main` przez [`ecacd1d`](https://github.com/Aplikacja-trenerska-studia/Aplikacja_trenerska/commit/ecacd1dd448c21d71e52f26c8ecf1037eeb1c730). Logi potwierdzają migrację Supabase do V8 i nadanie pierwszych uprawnień administratora. Publikację oraz pełny odbiór rozlicza [checklista sprintu](SPRINTY.md#rozszerzenie-s3-12--administrator-19112026).
 
 ## Zakres panelu
 
@@ -84,6 +84,15 @@ Filtry łączą się warunkiem AND. `q` szuka fragmentu e-maila lub nazwy bez ro
 - **33 testy frontendu**, build i lint przeszły. Pełny test UI sprawdził panel, wyszukiwanie i filtry, anulowanie zmiany, błąd zapisu `503` i ponowienie, przejścia `USER` → `TRAINER` → `ADMIN` → `USER`, blokadę/odblokowanie i unieważnianie JWT.
 - Widoki **1280 × 900** oraz **375 × 812** nie mają poziomego przewijania ani błędów JavaScript. Zrzuty sprawdzono wizualnie.
 - Izolowany test profilu `prod` przeszedł z migracjami V1–V8, schematem `training_app`, SMTP, portem hostingu i CORS. Test skryptu operatora potwierdził także odmowę zmiany roli zablokowanego konta.
+
+## Publikacja i odbiór online — 19.11.2026
+
+- `feat/admin-panel` wypchnięto z commitem `78f9918` i scalono do `main` przez `ecacd1d`. Oba produkcyjne wdrożenia Vercela dla tego samego kodu mają `READY`, a backend zwraca `UP`.
+- Logi Flyway o 18:08 UTC (19:08 w Warszawie) potwierdzają wykonanie jednej migracji V7 → V8 w Supabase w 0,110 s. Kolejny start rozpoznał wersję 8 bez ponawiania migracji.
+- Log inicjalizatora potwierdził nadanie pierwszej roli `ADMIN`. Po potwierdzeniu usunięto `APP_BOOTSTRAP_ADMIN_EMAIL` z konfiguracji Production. Adres konta i jego identyfikator nie są częścią dokumentacji ani repozytorium.
+- Strona `/admin` zwraca `200`, a paczka frontendu zawiera panel administratora. `/api/admin/users` i `/api/admin/overview` bez JWT zwracają `401`.
+
+Właściciel konta musi ponownie się zalogować, ponieważ nadanie roli unieważniło wcześniejsze sesje. Potwierdzenie nadania uprawnień pochodzi z logów inicjalizatora; nie logowano się hasłem użytkownika. Pełne sprawdzenie listy i operacji w panelu online na zalogowanym koncie, zespołowe review i test na rzeczywistym telefonie pozostają do potwierdzenia.
 
 ## Powtarzalne testy
 

@@ -209,7 +209,7 @@ Kontrakt endpointów kont i scenariusze weryfikacji: [ACCOUNTS.md](ACCOUNTS.md).
 | S3-09 | Trener: historia, pomiary i wykresy zaakceptowanego podopiecznego | BE-1 / FE-2 | | ✅ podgląd i odebranie dostępu po opuszczeniu grupy sprawdzone |
 | S3-10 | Test przepływu: rejestracja → plan → wynik → akceptacja zaproszenia → przypisanie planu | BE-2 | | ✅ `tests/smoke-sprint3-ui.mjs` przeszedł na pełnym stacku Docker |
 | S3-11 | Vercel/Supabase, produkcja z `main`, migracja konta i transport poczty `log` | OPS | | ✅ infrastruktura od 16.11; S3 wdrożony 19.11, oba projekty READY, migracje Supabase do V7 potwierdzone; pełny odbiór online osobno |
-| S3-12 | Panel administratora: konta, role, blokady, podsumowanie i jednorazowa inicjalizacja; V8 | BE-1 / FE-1 / OPS | | ✅ dodatkowo uzgodnione 19.11, technicznie wykonane i sprawdzone lokalnie; publikacja i pierwsze uprawnienia wymagają osobnego potwierdzenia |
+| S3-12 | Panel administratora: konta, role, blokady, podsumowanie i jednorazowa inicjalizacja; V8 | BE-1 / FE-1 / OPS | | ✅ dodatkowo uzgodnione i opublikowane 19.11; oba projekty READY, V8 i pierwsza inicjalizacja potwierdzone logami; pełny odbiór na zalogowanym koncie osobno |
 
 
 **Scenariusz:** użytkownik zapisuje trening i widzi wykres; trener tworzy grupę, podopieczny akceptuje zaproszenie, a trener przypisuje mu plan.
@@ -245,8 +245,12 @@ Zakres uzgodniony dodatkowo po wykonaniu S3-01–S3-11: lista i wyszukiwanie uż
 - [x] Cały zestaw **262 testów backendu** przeszedł bez błędów na PostgreSQL 17 i TimescaleDB/PostgreSQL 16. H2: 260 zaliczonych, 2 celowo pominięte testy rzeczywistego PostgreSQL.
 - [x] **33 testy frontendu**, build i lint przeszły. `tests/smoke-admin-ui.mjs` sprawdził zmiany ról `USER` → `TRAINER` → `ADMIN` → `USER`, blokadę/odblokowanie, JWT, anulowanie oraz ponowienie po `503`.
 - [x] Widoki 1280 × 900 i 375 × 812 sprawdzone bez przewijania poziomego i błędów JavaScript; zrzuty obejrzano. Profil produkcyjny lokalnie przeszedł test V1–V8, prywatnego schematu, SMTP, `PORT` i CORS. Skrypt operatora sprawdzono również dla zablokowanego konta.
-- [ ] Opublikować rozszerzenie, potwierdzić migrację V8 w Supabase i jednorazowo zainicjalizować pierwszego administratora. Nie nadano jeszcze uprawnień produkcyjnych w ramach opisanych sprawdzeń lokalnych.
+- [x] `feat/admin-panel` wypchnięto z commitem `78f9918` i scalono do `main` przez [`ecacd1d`](https://github.com/Aplikacja-trenerska-studia/Aplikacja_trenerska/commit/ecacd1dd448c21d71e52f26c8ecf1037eeb1c730). Oba produkcyjne wdrożenia Vercela osiągnęły `READY` dla tego samego kodu; backend zwraca `UP`.
+- [x] Logi Flyway z 18:08 UTC (19:08 w Warszawie) potwierdzają migrację Supabase V7 → V8: jedna migracja w 0,110 s. Kolejny start rozpoznał wersję 8 bez wykonywania kolejnych migracji.
+- [x] Log inicjalizatora potwierdził pierwsze nadanie `ADMIN`. Po potwierdzeniu usunięto `APP_BOOTSTRAP_ADMIN_EMAIL` z konfiguracji Production; adres i identyfikator konta pozostają poza dokumentacją. Strona `/admin` zwraca `200`, paczka zawiera panel, a `/api/admin/users` i `/api/admin/overview` bez JWT zwracają `401`.
 - [ ] Potwierdzić panel i operacje na zalogowanym koncie administratora online; zespołowe review i test na rzeczywistym telefonie pozostają odrębnymi kryteriami odbioru.
+
+Potwierdzenie pierwszych uprawnień pochodzi z logów inicjalizatora, a migracji z logów Flyway i prawidłowego startu backendu. Nie korzystano z hasła użytkownika. Po inicjalizacji właściciel konta musi zalogować się ponownie; sama dostępność strony i odmowa dostępu bez JWT nie zastępują pełnego odbioru panelu po zalogowaniu.
 
 ### Publikacja i odbiór S3
 
