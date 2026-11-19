@@ -24,6 +24,8 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -38,18 +40,34 @@ import ch.qos.logback.core.read.ListAppender;
 
 @SpringBootTest(properties = {
         "APP_MAIL_MODE=log",
-        "APP_JWT_SECRET=production-demo-fixture-signing-secret-at-least-32-bytes",
-        "APP_FRONTEND_URL=https://trainer-demo.example.test",
-        "SPRING_DATASOURCE_URL=jdbc:h2:mem:demo-prod;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;INIT=CREATE SCHEMA IF NOT EXISTS training_app\\\\;CREATE DOMAIN IF NOT EXISTS training_app.TIMESTAMPTZ AS TIMESTAMP WITH TIME ZONE",
-        "SPRING_DATASOURCE_USERNAME=sa", "SPRING_DATASOURCE_PASSWORD=demo-db-fixture",
-        "SPRING_FLYWAY_URL=jdbc:h2:mem:demo-prod;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;INIT=CREATE SCHEMA IF NOT EXISTS training_app\\\\;CREATE DOMAIN IF NOT EXISTS training_app.TIMESTAMPTZ AS TIMESTAMP WITH TIME ZONE",
-        "SPRING_FLYWAY_USER=sa", "SPRING_FLYWAY_PASSWORD=demo-db-fixture",
+        "APP_JWT_SECRET=production-mail-fixture-signing-secret-at-least-32-bytes",
+        "APP_FRONTEND_URL=https://trainer-app.example.test",
+        "SPRING_DATASOURCE_URL=jdbc:h2:mem:mail-prod;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;INIT=CREATE SCHEMA IF NOT EXISTS training_app\\\\;CREATE DOMAIN IF NOT EXISTS training_app.TIMESTAMPTZ AS TIMESTAMP WITH TIME ZONE",
+        "SPRING_DATASOURCE_USERNAME=sa", "SPRING_DATASOURCE_PASSWORD=mail-db-fixture",
+        "SPRING_FLYWAY_URL=jdbc:h2:mem:mail-prod;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;INIT=CREATE SCHEMA IF NOT EXISTS training_app\\\\;CREATE DOMAIN IF NOT EXISTS training_app.TIMESTAMPTZ AS TIMESTAMP WITH TIME ZONE",
+        "SPRING_FLYWAY_USER=sa", "SPRING_FLYWAY_PASSWORD=mail-db-fixture",
         "spring.datasource.driver-class-name=org.h2.Driver"
 })
 @AutoConfigureMockMvc
 @ActiveProfiles("prod")
-class DemoMailProductionIntegrationTests {
-    private static final String EMAIL = "demo-athlete@example.test";
+class LogMailProductionIntegrationTests {
+    @DynamicPropertySource
+    static void isolatedProductionDatabase(DynamicPropertyRegistry properties) {
+        // Keep this production-configuration fixture isolated even when the wider
+        // suite receives command-line PostgreSQL datasource overrides.
+        String url = "jdbc:h2:mem:mail-prod;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;"
+                + "DEFAULT_NULL_ORDERING=HIGH;INIT=CREATE SCHEMA IF NOT EXISTS training_app\\;"
+                + "CREATE DOMAIN IF NOT EXISTS training_app.TIMESTAMPTZ AS TIMESTAMP WITH TIME ZONE";
+        properties.add("spring.datasource.url", () -> url);
+        properties.add("spring.datasource.username", () -> "sa");
+        properties.add("spring.datasource.password", () -> "mail-db-fixture");
+        properties.add("spring.datasource.driver-class-name", () -> "org.h2.Driver");
+        properties.add("spring.flyway.url", () -> url);
+        properties.add("spring.flyway.user", () -> "sa");
+        properties.add("spring.flyway.password", () -> "mail-db-fixture");
+    }
+
+    private static final String EMAIL = "test-athlete@example.test";
     private static final String PASSWORD = "InitialPassword123!";
     private static final String NEW_PASSWORD = "ChangedPassword456!";
     private final Logger logger = (Logger) LoggerFactory.getLogger(AccountMailService.class);
@@ -63,7 +81,7 @@ class DemoMailProductionIntegrationTests {
     @MockitoBean JavaMailSender mailSender;
 
     @BeforeEach
-    void captureDemoLinks() {
+    void captureMailLinks() {
         jdbc.update("delete from training_app.verification_tokens");
         jdbc.update("delete from training_app.users");
         messages = new ListAppender<>();
@@ -86,7 +104,7 @@ class DemoMailProductionIntegrationTests {
         }
         mvc.perform(get("/api/health")).andExpect(status().isOk());
         String registration = jsonPost("/api/auth/register", """
-                {"email":"%s","password":"%s","displayName":"Demo athlete"}
+                {"email":"%s","password":"%s","displayName":"Test athlete"}
                 """.formatted(EMAIL, PASSWORD)).andExpect(status().isCreated())
                 .andExpect(jsonPath("accessToken").doesNotExist()).andReturn().getResponse().getContentAsString();
         String confirmation = loggedToken("EMAIL_CONFIRMATION", "confirm-email");
@@ -111,7 +129,7 @@ class DemoMailProductionIntegrationTests {
         String jwt = loginJwt(NEW_PASSWORD);
         deletionRequest(jwt, PASSWORD).andExpect(status().isBadRequest());
         assertThat(messages.list).extracting(ILoggingEvent::getFormattedMessage)
-                .noneMatch(message -> message.contains("[DEMO MAIL] ACCOUNT_DELETION"));
+                .noneMatch(message -> message.contains("[MAIL LINK] ACCOUNT_DELETION"));
         String deletionResponse = deletionRequest(jwt, NEW_PASSWORD).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         String deletion = loggedToken("ACCOUNT_DELETION", "confirm-deletion");
@@ -155,16 +173,16 @@ class DemoMailProductionIntegrationTests {
 
     private String loggedToken(String type, String page) {
         var links = messages.list.stream().map(ILoggingEvent::getFormattedMessage)
-                .filter(message -> message.startsWith("[DEMO MAIL] " + type + " ")).toList();
+                .filter(message -> message.startsWith("[MAIL LINK] " + type + " ")).toList();
         assertThat(links).hasSize(1);
-        var matcher = Pattern.compile("https://trainer-demo\\.example\\.test/" + page + "\\?token=([A-Za-z0-9_-]{43})$")
+        var matcher = Pattern.compile("https://trainer-app\\.example\\.test/" + page + "\\?token=([A-Za-z0-9_-]{43})$")
                 .matcher(links.getFirst());
         assertThat(matcher.find()).isTrue();
         return matcher.group(1);
     }
 
     private void assertPrivateResponseAndHash(String response, String token) throws Exception {
-        assertThat(response).doesNotContain(token, "?token=", "[DEMO MAIL]");
+        assertThat(response).doesNotContain(token, "?token=", "[MAIL LINK]");
         String hash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8)));
         assertThat(jdbc.queryForObject("select count(*) from training_app.verification_tokens where token = ?", Integer.class, token)).isZero();
         assertThat(jdbc.queryForObject("select count(*) from training_app.verification_tokens where token = ?", Integer.class, hash)).isEqualTo(1);

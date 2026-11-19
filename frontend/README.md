@@ -28,6 +28,10 @@ Testy używają wbudowanego runnera Node i obsługi TypeScript (`--experimental-
 | `/` | Publiczna strona wejściowa |
 | `/logowanie`, `/rejestracja` | Dla niezalogowanych; rejestracja wymaga aktywacji e-mailem |
 | `/profil` | Po zalogowaniu i potwierdzeniu sesji przez `GET /api/users/me` |
+| `/trening?planId=…` | Wybór dnia planu i zapis rzeczywiście wykonanych serii |
+| `/progres` | Wyniki, pomiary ciała, filtrowana historia i wykresy |
+| `/wspolpraca` | Zaproszenia od trenerów, zgoda na dostęp do progresu i przypisane plany |
+| `/trener?grupa=…` | Tylko TRAINER: grupy, zaproszenia, przypisywanie planów i podgląd progresu |
 | `/forgot-password` | Wysłanie prośby o reset hasła |
 | `/reset-password?token=…` | Ustawienie i powtórzenie nowego hasła |
 | `/confirm-email?token=…` | Aktywacja konta przyciskiem; ponowna wysyłka linku |
@@ -66,4 +70,6 @@ Remove-Item Env:VERCEL, Env:VITE_API_URL
 
 Pełna kolejność wdrożenia i zmienne backendu/Supabase: [instrukcja wdrożenia](../docs/DEPLOYMENT.md).
 
-Do prezentacji bez wysyłania prawdziwych wiadomości ustaw w backendzie `APP_MAIL_MODE=log`, a we frontendzie `VITE_MAIL_MODE=log` i zbuduj go ponownie. Interfejs pokaże informację o trybie demonstracyjnym i poprosi o link od prowadzącego prezentację. Prowadzący kopiuje link z prywatnych logów backendu; przeglądarka nie otrzymuje tokenów z dodatkowego API. Rejestracja nadal wymaga aktywacji, a reset hasła i usunięcie konta nadal korzystają z jednorazowych linków. Domyślnie `VITE_MAIL_MODE=smtp` zachowuje teksty dotyczące wysyłki e-maili. Ta publiczna flaga zmienia tylko komunikaty interfejsu — sposób dostarczenia linków wybiera backend.
+Frontend pokazuje standardowe komunikaty dotyczące poczty. Lokalny Mailpit przechwytuje wiadomości z linkami aktywacji, resetu hasła i usunięcia konta; sposób dostarczenia wiadomości konfiguruje backend.
+
+Wykres ciężaru pokazuje największy ciężar serii danego ćwiczenia w każdym lokalnym dniu. Wykresy wagi i obwodów pokazują poszczególne pomiary. Każdy wykres ma rozwijaną tabelę dokładnych wartości. Historia wyników obejmuje maksymalnie 2000 ostatnich serii, a pomiary — 500 ostatnich wpisów dla wybranych filtrów; zakres dat pozwala przejrzeć starsze dane. Podopieczny akceptuje zaproszenie w aplikacji i może zakończyć współpracę. Trener widzi progres tylko przy aktywnej współpracy. Przypisanie planu tworzy niezależną kopię na koncie podopiecznego.

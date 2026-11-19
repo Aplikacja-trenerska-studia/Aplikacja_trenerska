@@ -72,4 +72,4 @@ Tworzenie, edycja i usuwanie są pojedynczymi transakcjami. Nieudane żądanie n
 
 Wszystkie testy: `./mvnw.cmd test` w `backend` (JDK 21) lub `pwsh -NoProfile -File tests/test-workout-postgres.ps1` w katalogu głównym (Docker, tymczasowy PostgreSQL 16). Testy nie łączą się z bazą Compose.
 
-API planów i katalogu zamyka zakres S2-07, a testy HTTP planów — S2-11. Listy, kreator, edycja i usuwanie S2-08/09 są wdrożone: [WORKOUT_FRONTEND.md](WORKOUT_FRONTEND.md). Pełne demo z tworzeniem planu przez UI przeszło na lokalnym Docker Compose. Review/merge i test na rzeczywistym telefonie pozostają w domknięciu zespołowym sprintu.
+API planów i katalogu zamyka zakres S2-07, a testy HTTP planów — S2-11. Listy, kreator, edycja i usuwanie S2-08/09 są wdrożone: [WORKOUT_FRONTEND.md](WORKOUT_FRONTEND.md). Pełny scenariusz tworzenia planu przez UI przeszedł na lokalnym Docker Compose. Review i test na rzeczywistym telefonie pozostają w domknięciu zespołowym sprintu. Kopie planów przypisane przez trenera należą do odbiorcy i są obsługiwane przez to samo API; szczegóły: [SPRINT3.md](SPRINT3.md).

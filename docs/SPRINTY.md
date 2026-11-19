@@ -2,7 +2,7 @@
 
 > Uzupełnienie do `PLAN.md`. Sprint = 1 tydzień (pon–nd). Termin oddania projektu: **19.12.2026**.
 
-> **Stan na 16.11.2026:** 11 zadań kont i planów ze Sprintu 2 wykonano technicznie. Wdrożenie na Vercel i Supabase należy do Sprintu 3 (S3-11) i zostało wykonane z wyprzedzeniem. Produkcja działa z `main`; szczegóły i zakres sprawdzeń: [DEPLOYMENT.md](DEPLOYMENT.md).
+> **Stan na 19.11.2026:** konta i plany ze Sprintu 2 oraz progres i trener (S3-01–S3-10) są technicznie gotowe i sprawdzone lokalnie. Implementację S3 przygotowano 19.11 na `feat/sprint-3`; publikację, wdrożenie i odbiór rozliczamy osobno w [checkliście poniżej](#publikacja-i-odbiór-s3). Terminu Sprintu 3 (**23–29.11**) nie zmieniamy. Pierwsze wdrożenie Vercel/Supabase (S3-11) wykonano wcześniej, 16.11. Szczegóły: [SPRINT3.md](SPRINT3.md), [DEPLOYMENT.md](DEPLOYMENT.md).
 
 **Legenda:** ✅ / `[x]` — technicznie wykonane i sprawdzone w opisanym zakresie; 🟡 — częściowo; ☐ / `[ ]` — pozostaje do wykonania albo potwierdzenia. Status funkcji nie zastępuje zespołowego review ani całej Definition of Done; scalenie i wdrożenie są raportowane osobno.
 
@@ -70,7 +70,7 @@ Kolumna `Kto` w tabelach jest do uzupełnienia na początku sprintu.
 | S1-10 | Szkic modelu danych na kartce/diagramie (uzgodniony w zespole)                                                | BE-2    | 🟡 szkic w `PLAN.md` + `docs/BACKEND_STRUCTURE.md`; diagram zespołowy — do uzgodnienia |
 
 
-**Demo na koniec sprintu:** `docker compose up --build` → rejestracja → potwierdzenie linkiem z Mailpit → logowanie → profil i wylogowanie.
+**Scenariusz na koniec sprintu:** `docker compose up --build` → rejestracja → potwierdzenie linkiem z Mailpit → logowanie → profil i wylogowanie.
 **Poza pierwotnym zakresem S1:** potwierdzenie e-mail i reset hasła należą do S2; są już wdrożone z wyprzedzeniem.
 
 ### Raport — Sprint 1
@@ -87,7 +87,7 @@ Kolumna `Kto` w tabelach jest do uzupełnienia na początku sprintu.
 - [x] **S1-07** — routing (`/`, `/logowanie`, `/rejestracja`), `AppLayout`, Dockerfile FE
 - [x] **S1-08** — formularze PL, token w `localStorage`, ochrona tras (obecnie `/profil`; `/` jest publiczną stroną wejściową)
 - [x] **S1-09** — obrazy Docker, uruchomienie jedną komendą `docker compose up --build`
-- [x] **Demo** — rejestracja → potwierdzenie w Mailpit → logowanie → profil + wylogowanie
+- [x] **Scenariusz przepływu** — rejestracja → potwierdzenie w Mailpit → logowanie → profil + wylogowanie
 
 ### Częściowo
 
@@ -135,11 +135,11 @@ Kolumna `Kto` w tabelach jest do uzupełnienia na początku sprintu.
 | S2-11 | Pierwsze testy backendu (auth + plany, happy path) | BE-2 | | ✅ testy kont, modelu, katalogu i HTTP planów; CRUD, walidacja, odmowa dostępu do cudzych danych |
 
 
-**Demo:** pełna ścieżka: rejestracja → potwierdzenie → login → utworzenie planu z ćwiczeniami.
+**Scenariusz:** pełna ścieżka: rejestracja → potwierdzenie → login → utworzenie planu z ćwiczeniami.
 
 ### Postęp Sprintu 2 — stan na 16.11.2026
 
-Zrealizowano technicznie **11 z 11 zadań S2**. Demo całego przepływu S2 sprawdzono lokalnie w Docker Compose. Kod jest scalony do `main`. Zespołowe review, raport i test na rzeczywistym telefonie pozostają do wykonania; status techniczny nie zamyka całej Definition of Done. Wdrożenie online i jego odbiór są raportowane w S3-11.
+Zrealizowano technicznie **11 z 11 zadań S2**. Cały przepływ S2 sprawdzono lokalnie w Docker Compose. Kod S2 jest scalony do `main`. Zespołowe review, raport i test na rzeczywistym telefonie pozostają do wykonania; status techniczny nie zamyka całej Definition of Done. Wdrożenie online i jego odbiór są raportowane w S3-11.
 
 ### Zrobione
 
@@ -161,7 +161,7 @@ Zrealizowano technicznie **11 z 11 zadań S2**. Demo całego przepływu S2 spraw
 - [x] **S2-08:** dodano `/cwiczenia`, `/plany`, `/plany/:id`, nawigację i powrót po logowaniu z zachowaniem filtrów. Build, lint i 9 testów frontendu przeszły. Test `tests/smoke-workout-ui.mjs` przeszedł na rzeczywistym stacku Compose: filtry/historia, ładowanie, puste listy, plan i szczegóły, błędy/ponowienie, 404/401 oraz widoki 1280 × 900 i 375 × 812 bez poziomego przewijania i błędów JavaScript. Zrzuty sprawdzono wizualnie. Szczegóły: [WORKOUT_FRONTEND.md](WORKOUT_FRONTEND.md).
 
 - [x] **S2-09:** `/plany/nowy` i `/plany/:id/edytuj` zapisują pełny plan przez POST/PUT. Wybór z katalogu ma filtry; dni i wpisy można dodawać, usuwać i przestawiać. Walidacja zachowuje szkic po błędzie, obsługuje ciężar z przecinkiem i ograniczenia API. DELETE wymaga osobnego potwierdzenia w dialogu; anulowanie i błąd nie usuwają planu. Build, lint bez ostrzeżeń i 16 testów frontendu przeszły.
-- [x] **Demo S2:** `tests/smoke-workout-ui.mjs` przeszedł na Compose przez nginx z rzeczywistym API i Mailpit: rejestracja w UI → aktywacja w UI z linku Mailpit → logowanie → utworzenie planu w kreatorze → edycja i trwały odczyt → usunięcie z potwierdzeniem. Sprawdzono też walidację, kolejność, zachowanie szkicu przy błędach POST/PUT, anulowanie i ponawianie DELETE oraz desktop 1280 × 900 i widok mobilny 375 × 812. Brak poziomego przewijania i błędów JavaScript; zrzuty sprawdzono wizualnie. Konto i plany testowe usunięto po teście. Szczegóły: [WORKOUT_FRONTEND.md](WORKOUT_FRONTEND.md).
+- [x] **Scenariusz S2:** `tests/smoke-workout-ui.mjs` przeszedł na Compose przez nginx z rzeczywistym API i Mailpit: rejestracja w UI → aktywacja w UI z linku Mailpit → logowanie → utworzenie planu w kreatorze → edycja i trwały odczyt → usunięcie z potwierdzeniem. Sprawdzono też walidację, kolejność, zachowanie szkicu przy błędach POST/PUT, anulowanie i ponawianie DELETE oraz desktop 1280 × 900 i widok mobilny 375 × 812. Brak poziomego przewijania i błędów JavaScript; zrzuty sprawdzono wizualnie. Konto i plany testowe usunięto po teście. Szczegóły: [WORKOUT_FRONTEND.md](WORKOUT_FRONTEND.md).
 
 ### Pozostało do zamknięcia S2
 
@@ -173,16 +173,16 @@ Zrealizowano technicznie **11 z 11 zadań S2**. Demo całego przepływu S2 spraw
 - Wrapper Maven miał CRLF, co blokowało build kontenera Linux. Naprawiono końce linii i regułę `.gitattributes`; ponowny build i start przeszły.
 - Brave crashował przy wpisaniu trzech liter w pole nazwy. Zastosowano `autocomplete="off"` wyłącznie dla nazwy wyświetlanej; użytkownik potwierdził skuteczność po Ctrl+F5.
 - Lokalnie pocztę przechwytuje Mailpit. Wdrożenie i sposób obsługi linków online należą do S3-11.
-- Usuwanie konta obejmuje już model planów (V3); przy dodawaniu wyników treningów i relacji trenerskich w S3 trzeba rozszerzyć zasady usuwania i testy integralności o nowe tabele.
+- Usuwanie konta obejmuje model planów (V3). W S3 rozszerzono i sprawdzono kaskady wyników, pomiarów, grup, członkostw i przypisań (V5/V6). Niezależne kopie planów należące do innych kont pozostają.
 
 Kontrakt endpointów kont i scenariusze weryfikacji: [ACCOUNTS.md](ACCOUNTS.md).
 
 ### Następny zakres po S2 (Sprint 3)
 
 - Wdrożenie Vercel/Supabase (S3-11, wykonane z wyprzedzeniem) i odbiór pełnych przepływów online
-- Zapis wyników treningów, waga, obwody ciała (TimescaleDB hypertables)
+- Zapis wyników treningów, waga, obwody ciała (hypertabele TimescaleDB w Dockerze, zgodne zwykłe tabele w Supabase PostgreSQL 17)
 - Historia i wykresy progresu
-- Moduł trenera: grupy podopiecznych, przypisywanie planów
+- Moduł trenera: grupy podopiecznych, zaproszenia z akceptacją, przypisywanie niezależnych kopii planów
 - Test przepływu: rejestracja → plan → wynik treningu
 
 ---
@@ -193,55 +193,87 @@ Kontrakt endpointów kont i scenariusze weryfikacji: [ACCOUNTS.md](ACCOUNTS.md).
 
 **Cel:** zamknięcie wszystkich funkcji P1: śledzenie postępów (M3), moduł trenera (M4) i wdrożenie online na Vercel i Supabase.
 
-> To najcięższy sprint. Jeśli zabraknie czasu, **S3-09 (podgląd progresu podopiecznych) przenosimy do S4**.
+> Zakres S3-01–S3-10 wykonano i sprawdzono technicznie z wyprzedzeniem 19.11.2026, łącznie z podglądem progresu podopiecznych (S3-09). Potwierdzone testy nie oznaczają scalenia, wdrożenia ani zamknięcia zespołowej Definition of Done.
 
 
-| ID    | Zadanie                                                                               | Tor         | Kto |
-| ----- | ------------------------------------------------------------------------------------- | ----------- | --- |
-| S3-01 | Migracje: `exercise_results`, `body_metrics` + `create_hypertable`                    | BE-2        |     |
-| S3-02 | API: `POST/GET /api/results`, `POST/GET /api/body-metrics`                            | BE-2        |     |
-| S3-03 | Frontend: ekran „wykonaj trening" (wybór planu → wpisanie serii)                      | FE-1        |     |
-| S3-04 | Frontend: historia + **wykresy** (ciężar w czasie, waga ciała, obwody)                | FE-2        |     |
-| S3-05 | Migracje: `training_groups`, `group_members`, `plan_assignments`                      | BE-1        |     |
-| S3-06 | API trenera: tworzenie grup, dodawanie podopiecznych, `assign-plan`                   | BE-1        |     |
-| S3-07 | Frontend: panel trenera (grupy, podopieczni, przypisanie planu)                       | FE-2        |     |
-| S3-08 | Frontend: użytkownik widzi plany przypisane przez trenera                             | FE-1        |     |
-| S3-09 | Trener: podgląd progresu podopiecznego (API + widok)                                  | BE-1 / FE-2 |     |
-| S3-10 | Test przepływu kluczowego: rejestracja → plan → zapis wyniku → trener przypisuje plan | BE-2        |     |
-| S3-11 | Wdrożenie Vercel/Supabase, produkcja z `main`, migracja konta i poczta demo — ✅ wykonane 16.11 z wyprzedzeniem | OPS | |
+| ID | Zadanie | Tor | Kto | Status na 19.11 |
+|---|---|---|---|---|
+| S3-01 | V5: `exercise_results`, `body_metrics`; V7: warunkowe `create_hypertable` | BE-2 | | ✅ migracje V4 → V7 sprawdzone na PostgreSQL 17 i TimescaleDB/PostgreSQL 16; dwie rzeczywiste hypertabele |
+| S3-02 | API zapisu, historii i usuwania własnych wyników oraz pomiarów | BE-2 | | ✅ walidacja, własność, atomowość, filtry i kaskady sprawdzone |
+| S3-03 | Frontend: wykonanie treningu z wybranego planu i dnia, wpisanie serii | FE-1 | | ✅ zapis z własnego i przypisanego planu sprawdzony przez UI |
+| S3-04 | Frontend: historia i wykresy ciężaru, wagi oraz obwodów z filtrami dat | FE-2 | | ✅ pomiary, historia i wykresy sprawdzone; czytelność osi poprawiona i zweryfikowana |
+| S3-05 | V6: `training_groups`, `group_members`, `plan_assignments` | BE-1 | | ✅ integralność, niezależne kopie i kaskady sprawdzone |
+| S3-06 | API trenera: własne grupy, zaproszenia z akceptacją, przypisywanie planów | BE-1 | | ✅ role, własność grup i zgoda podopiecznego sprawdzone |
+| S3-07 | Frontend: panel trenera, grupy, członkowie i przypisanie planu | FE-2 | | ✅ pełny przepływ panelu trenera sprawdzony przez UI |
+| S3-08 | Frontend: zaproszenia, ich akceptacja, opuszczenie grupy i przypisane plany | FE-1 | | ✅ akceptacja, otrzymana kopia i trening z kopii sprawdzone |
+| S3-09 | Trener: historia, pomiary i wykresy zaakceptowanego podopiecznego | BE-1 / FE-2 | | ✅ podgląd i odebranie dostępu po opuszczeniu grupy sprawdzone |
+| S3-10 | Test przepływu: rejestracja → plan → wynik → akceptacja zaproszenia → przypisanie planu | BE-2 | | ✅ `tests/smoke-sprint3-ui.mjs` przeszedł na pełnym stacku Docker |
+| S3-11 | Vercel/Supabase, produkcja z `main`, migracja konta i transport poczty `log` | OPS | | ✅ infrastruktura uruchomiona 16.11; publikacja i odbiór nowych funkcji według checklisty poniżej |
 
 
-**Demo:** użytkownik zapisuje trening i widzi wykres; trener tworzy grupę i przypisuje plan.
+**Scenariusz:** użytkownik zapisuje trening i widzi wykres; trener tworzy grupę, podopieczny akceptuje zaproszenie, a trener przypisuje mu plan.
+
+### Postęp Sprintu 3 — implementacja S3-01–S3-10 (19.11.2026)
+
+Implementację przygotowano na `feat/sprint-3` 19.11.2026. Testy backendu, frontendu, migracji i pełnego przepływu przeszły w opisanym poniżej zakresie. Publikację, wdrożenie produkcyjne i zespołowy odbiór rozliczamy osobno w checkliście; same wyniki testów nie potwierdzają ich wykonania. Kontrakt API i instrukcja sprawdzenia: [SPRINT3.md](SPRINT3.md).
+
+- [x] **S3-01/S3-02:** wyniki serii i pomiary ciała, walidacja zakresów, własność danych, filtry czasu i usuwanie błędnych wpisów. Zapis serii treningu jest atomowy. Historia zachowuje nazwy planu, dnia i ćwiczenia także po zmianie lub usunięciu planu.
+- [x] **S3-03/S3-04:** wykonanie treningu z własnego lub przypisanego planu, historia i wykresy ciężaru, wagi oraz obwodów. API zwraca do 2000 najnowszych wyników i 500 pomiarów w wybranym zakresie; filtry dat umożliwiają odczyt starszych wpisów.
+- [x] **S3-05–S3-08:** grupy należą do trenera. Zaproszenie po e-mailu wymaga akceptacji w aplikacji; użytkownik może je odrzucić lub opuścić grupę. Przypisanie tworzy niezależną kopię planu dla osoby albo zaakceptowanych członków grupy.
+- [x] **S3-09:** trener widzi progres wyłącznie zaakceptowanego podopiecznego we własnej grupie. Opuszczenie grupy lub usunięcie członkostwa odbiera dostęp. Powtórne przypisanie tego samego planu nie tworzy kolejnej kopii.
+- [x] **Integralność:** usunięcie konta usuwa jego progres, pomiary, grupy, członkostwa i powiązane przypisania. Cudze konta, katalog i niezależne kopie planów podopiecznych pozostają.
+- [x] **S3-10:** `tests/smoke-sprint3-ui.mjs` przeszedł na pełnym stacku Docker: rejestracja z SMTP do Mailpit → aktywacja → plan w UI → zapis treningu → pomiary i wykresy → zaproszenie trenera → akceptacja → przypisanie niezależnej kopii → trening z kopii → opuszczenie grupy i odebranie dostępu.
+
+**Uzgodniona baza:** TimescaleDB w lokalnym Dockerze; zwykłe tabele PostgreSQL z indeksami czasu w Supabase PostgreSQL 17. V5 tworzy wspólny schemat, a V7 rozpoznaje dostępność TimescaleDB i tylko wtedy tworzy hypertabele. Brak rozszerzenia w Supabase nie blokuje startu ani funkcji progresu. Zmiana hostingu bazy nie jest potrzebna.
+
+### Wyniki sprawdzeń S3 — 19.11.2026
+
+- [x] **Backend:** po 216 testów bez niepowodzeń i błędów na PostgreSQL 17 oraz TimescaleDB/PostgreSQL 16, w odrębnym prywatnym schemacie `training_app`. H2: 215 zaliczonych i 1 celowo pominięty test wymagający PostgreSQL, 216 łącznie.
+- [x] **Migracje:** aktualizacja V4 → V7 zachowuje istniejące konto i plan; ponowne uruchomienie wykonuje 0 migracji. Na TimescaleDB potwierdzono dwie rzeczywiste hypertabele. Powtarzalny test: `tests/test-sprint3-databases.ps1`.
+- [x] **Frontend:** 27 testów, build i lint zaliczone. Pełny przepływ UI przeszedł bez błędów JavaScript i poziomego przewijania przy 1280 × 900 oraz 375 × 812. Zrzuty obejrzano; poprawiono i ponownie sprawdzono czytelność podpisów osi wykresów (12 px).
+- [x] **Profil produkcyjny lokalnie:** izolowany `tests/smoke-deployment.ps1` przeszedł z prywatnym schematem, migracjami V1–V7, SMTP, `PORT`, CORS i ochroną tras. Nie oznacza to zastosowania zmian w produkcyjnej bazie Supabase.
+
+### Publikacja i odbiór S3
+
+- [ ] **Publikacja brancha:** utworzyć commit i wypchnąć `feat/sprint-3` na GitHuba.
+- [ ] **Scalenie:** połączyć `feat/sprint-3` z `main` przez commit scalający (`--no-ff`) i wypchnąć `main`.
+- [ ] **Wdrożenie:** potwierdzić gotowe wdrożenia obu projektów Vercela z `main`, zdrowie API, migracje V1–V7 w Supabase, ochronę tras i CORS.
+- [ ] **Review zespołowe:** przeprowadzić review z udziałem co najmniej jednej osoby z zespołu.
+- [ ] **Pełny odbiór online:** na osobnym koncie testowym wykonać rejestrację, aktywację, plan, trening, pomiary, współpracę z trenerem oraz przepływy resetu hasła i usunięcia konta. Uwzględnić rzeczywiście skonfigurowany transport poczty.
+- [ ] **Rzeczywisty telefon:** sprawdzić nowe ekrany na fizycznym urządzeniu.
+- [ ] **Domknięcie zespołowe:** uzupełnić raport sprintu i właścicieli zadań.
 
 ### Postęp Sprintu 3 — wdrożenie S3-11 (16.11.2026)
 
-Wdrożenie wykonano przed planowanym terminem Sprintu 3. Zadania progresu i modułu trenera (S3-01–S3-10) pozostają do wykonania.
+Pierwsze wdrożenie wykonano przed planowanym terminem Sprintu 3. Opisany tu historyczny stan z 16.11 dotyczy kont i planów z S2. Status publikacji kolejnych funkcji jest rozliczany w checkliście „Publikacja i odbiór S3”.
 
 - [x] Frontend: [aplikacja-trenerska.vercel.app](https://aplikacja-trenerska.vercel.app); backend: [API health](https://aplikacja-trenerska-api.vercel.app/api/health). Backend działa jako kontener Java 21 w regionie `dub1`.
 - [x] Supabase PostgreSQL 17: prywatny schemat `training_app`, migracje V1–V4 i 48 ćwiczeń. Przeniesiono jedyne lokalne konto z zachowaniem danych i hasła; kopie zapasowe pozostają poza GitHubem. Lokalna baza nie zawierała planów.
-- [x] Tryb demonstracyjny bez dostawcy SMTP: `APP_MAIL_MODE=log` i `VITE_MAIL_MODE=log`; linki do operacji na koncie odczytuje się z prywatnych logów API.
+- [x] Backend skonfigurowano bez dostawcy SMTP, z `APP_MAIL_MODE=log`; linki do operacji na koncie zapisywały się w prywatnych logach API. Nie potwierdza to dostarczenia wiadomości do użytkownika.
 - [x] Scalenie do `main` (`ee2fa1e`), wdrożenie tego commita w obu projektach i ustawienie `main` jako Production Branch. Tymczasowy `feat/deployment` usunięto lokalnie i na GitHubie.
-- [x] Sprawdzenia online: backend `UP`, zapytanie do bazy przy logowaniu nieistniejącym kontem (`401`), ochrona profilu/katalogu/planów bez JWT (`401`), CORS dla frontendu i odrzucenie obcego originu (`403`), trasy SPA (`200`) oraz poprawny adres API i komunikaty demo w paczce frontendu.
+- [x] Sprawdzenia online: backend `UP`, zapytanie do bazy przy logowaniu nieistniejącym kontem (`401`), ochrona profilu/katalogu/planów bez JWT (`401`), CORS dla frontendu i odrzucenie obcego originu (`403`), trasy SPA (`200`) oraz poprawny adres API w paczce frontendu.
 - [x] Sprawdzenia lokalne konfiguracji: 157 testów backendu, 21 testów frontendu, build i lint. Test integracyjny profilu `prod` obejmuje aktywację, reset i usunięcie konta bez SMTP; nie jest to potwierdzenie wykonania tych operacji na żywej bazie.
 
 ### Pozostałe sprawdzenia wdrożenia — S3-11
 
-- [ ] Na osobnym koncie testowym wykonać pełne demo online: rejestracja → aktywacja z logów → logowanie → CRUD planu → reset hasła → potwierdzone usunięcie konta.
+- [ ] Na osobnym koncie testowym wykonać pełny przepływ online: rejestracja → aktywacja → logowanie → CRUD planu → reset hasła → potwierdzone usunięcie konta. Uwzględnić rzeczywiście skonfigurowany transport poczty.
 - [ ] Potwierdzić brak błędów przeglądarki podczas pełnych przepływów online zgodnie z [checklistą wdrożenia](DEPLOYMENT.md#5-sprawdź-wdrożenie).
 
 ### Ryzyka wdrożenia
 
-- Online działa jawny tryb `log` bez wysyłki prawdziwych wiadomości. Linki z logów pozwalają wykonać operacje na koncie, dlatego logi pozostają prywatne. Rzeczywisty SMTP jest opcjonalnym kolejnym krokiem.
-- Przed pracą nad pomiarami trzeba zdecydować o ich technologii: wdrożenie Supabase używa PostgreSQL 17 bez TimescaleDB. Szczegóły ograniczenia i źródło: [DEPLOYMENT.md](DEPLOYMENT.md#preview-i-kolejne-migracje).
+- Ostatnio potwierdzona konfiguracja online używa `log`, bez wysyłki wiadomości. Linki pozwalają wykonać operacje na koncie, dlatego logi pozostają prywatne. Dostarczanie wiadomości do użytkowników wymaga skonfigurowanego SMTP.
+- W Supabase PostgreSQL 17 nie ma TimescaleDB. Uzgodnione V5/V7 zachowują zgodność zwykłych tabel online i hypertabel lokalnych; oba warianty oraz aktualizację istniejącej bazy sprawdzono lokalnie. Po wdrożeniu należy potwierdzić wykonanie nowych migracji i przepływy na produkcji. Szczegóły: [DEPLOYMENT.md](DEPLOYMENT.md#preview-i-kolejne-migracje).
 
 ### Raport — Sprint 3
 
 ```markdown
 ## Raport: Sprint 3 (23–29.11)
 ### Zrobione
-- [ ] S3-01 ...
-### Nie zrobione / przeniesione
--
+- [x] S3-01–S3-10 — implementacja przygotowana 19.11 na `feat/sprint-3` i sprawdzona technicznie; wyniki testów opisano powyżej
+- [x] S3-11 — pierwsze wdrożenie Vercel/Supabase wykonane 16.11, produkcja z `main`
+### Publikacja i odbiór
+- Status commita, pushowania, scalenia i wdrożenia: checklista „Publikacja i odbiór S3”
+- Review zespołowe, test na rzeczywistym telefonie i pełny odbiór online są potwierdzane niezależnie
 ### Problemy i ryzyka
 -
 ### Plan na następny tydzień (Sprint 4)
@@ -266,13 +298,13 @@ Wdrożenie wykonano przed planowanym terminem Sprintu 3. Zadania progresu i modu
 | S4-02 | **Kalkulator kalorii i makro** (np. Mifflin-St Jeor): endpoint + widok                                          | BE-2 / FE-1 |     |
 | S4-03 | **Kalendarz**: tabela `scheduled_workouts`, planowanie treningu na dany dzień, widok kalendarza                 | BE-1 / FE-2 |     |
 | S4-04 | **Przypomnienia** (wersja prosta: lista „dziś do zrobienia" na dashboardzie; opcjonalnie `@Scheduled` + e-mail) | BE-1        |     |
-| S4-05 | **Statystyki**: objętość tygodniowa, rekordy (zapytania z `time_bucket`) + widok                                | BE-2 / FE-2 |     |
+| S4-05 | **Statystyki**: objętość tygodniowa, rekordy i widok; wspólne zapytania PostgreSQL (`date_trunc`, opcjonalnie `time_bucket` lokalnie) | BE-2 / FE-2 |     |
 | S4-06 | **Udostępnianie planów** (link / `is_shared`, kopiowanie planu do swojego konta)                                | BE-2 / FE-1 |     |
 | S4-07 | Dashboard (strona główna po zalogowaniu: najbliższy trening, ostatnie wyniki)                                   | FE-1        |     |
 | S4-08 | Przegląd UI na telefonie, lista błędów do S5                                                                    | wszyscy     |     |
 
 
-**Demo:** wszystkie moduły widoczne w aplikacji.
+**Scenariusz:** wszystkie moduły widoczne w aplikacji.
 
 ### Raport — Sprint 4
 
@@ -288,7 +320,7 @@ Wdrożenie wykonano przed planowanym terminem Sprintu 3. Zadania progresu i modu
 - Algorytm oceny planów treningowych
 - Poprawki UI na urządzeniach mobilnych
 - Naprawa błędów, testy
-- Dokumentacja (README, API) i dane demonstracyjne
+- Dokumentacja (README, API) i dane przykładowe
 - Test uruchomienia od zera w Dockerze
 ```
 
@@ -307,7 +339,7 @@ Wdrożenie wykonano przed planowanym terminem Sprintu 3. Zadania progresu i modu
 | S5-02 | Poprawki UI: test na prawdziwym telefonie i na komputerze                                                    | FE-1 / FE-2 |     |
 | S5-03 | Bugfixy z listy z S4-08                                                                                      | wszyscy     |     |
 | S5-04 | Dokumentacja: `README`, instrukcja uruchomienia, opis API (springdoc / Swagger)                              | BE-1        |     |
-| S5-05 | Dane demo (użytkownik, trener, przykładowe plany i wyniki)                                                   | BE-2        |     |
+| S5-05 | Dane przykładowe (użytkownik, trener, przykładowe plany i wyniki)                                            | BE-2        |     |
 | S5-06 | Test „od zera": czysty clone → `docker compose up` → działa                                                  | OPS         |     |
 | S5-07 | *(opcjonalnie, tylko gdy wszystko wyżej gotowe)* mały moduł social/DM lub lista wydarzeń sportowych          | —           |     |
 
@@ -325,7 +357,7 @@ Wdrożenie wykonano przed planowanym terminem Sprintu 3. Zadania progresu i modu
 ### Plan na ostatni tydzień (14–19.12)
 - Tylko poprawki błędów i dokumentacja (bez nowych funkcji)
 - Finalny test uruchomienia w Dockerze
-- Przygotowanie prezentacji / oddanie projektu
+- Przygotowanie do oddania projektu
 ```
 
 ---

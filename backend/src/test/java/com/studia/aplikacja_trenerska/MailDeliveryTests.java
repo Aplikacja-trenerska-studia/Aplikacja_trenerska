@@ -38,7 +38,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 
 class MailDeliveryTests {
-    private static final String FRONTEND = "https://trainer-demo.example.test";
+    private static final String FRONTEND = "https://trainer-app.example.test";
     private static final String TOKEN = "private-token-fixture";
     private final Logger logger = (Logger) LoggerFactory.getLogger(AccountMailService.class);
     private ListAppender<ILoggingEvent> messages;
@@ -58,7 +58,7 @@ class MailDeliveryTests {
 
     @ParameterizedTest
     @CsvSource({"EMAIL_CONFIRMATION,confirm-email", "PASSWORD_RESET,reset-password", "ACCOUNT_DELETION,confirm-deletion"})
-    void demoWritesEveryActionLinkWithoutSendingMailOrLoggingRecipient(VerificationTokenType type, String path) {
+    void logTransportWritesEveryActionLinkWithoutSendingMailOrLoggingRecipient(VerificationTokenType type, String path) {
         JavaMailSender sender = mock(JavaMailSender.class);
         var factory = new DefaultListableBeanFactory();
         factory.registerSingleton("mailSender", sender);
@@ -69,12 +69,12 @@ class MailDeliveryTests {
 
         verifyNoInteractions(sender);
         assertThat(messages.list).extracting(ILoggingEvent::getFormattedMessage)
-                .contains("[DEMO MAIL] " + type + " " + FRONTEND + "/" + path + "?token=" + TOKEN)
+                .contains("[MAIL LINK] " + type + " " + FRONTEND + "/" + path + "?token=" + TOKEN)
                 .noneMatch(message -> message.contains("private-recipient@example.test"));
     }
 
     @Test
-    void demoDoesNotRequireAMailSenderBean() {
+    void logTransportDoesNotRequireAMailSenderBean() {
         var service = new AccountMailService(new DefaultListableBeanFactory().getBeanProvider(JavaMailSender.class),
                 account(null), new MailDeliveryProperties(MailDeliveryProperties.Mode.LOG));
         assertThatCode(() -> service.send("unused@example.test", TOKEN, VerificationTokenType.EMAIL_CONFIRMATION,
@@ -100,7 +100,7 @@ class MailDeliveryTests {
                 VerificationTokenType.PASSWORD_RESET, Duration.ofMinutes(30)))
                 .isInstanceOf(ResponseStatusException.class);
         assertThat(messages.list).extracting(ILoggingEvent::getFormattedMessage)
-                .noneMatch(message -> message.contains(TOKEN) || message.contains("[DEMO MAIL]")
+                .noneMatch(message -> message.contains(TOKEN) || message.contains("[MAIL LINK]")
                         || message.contains("recipient@example.test"));
     }
 

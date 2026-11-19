@@ -25,7 +25,7 @@ test('filter URLs can be restored without changing their meaning', () => {
 })
 
 test('login returns to protected lists and plan details including filters', () => {
-  for (const path of ['/profil', '/plany', '/plany/123', '/plany/nowy', '/plany/123/edytuj', '/cwiczenia?type=HOME&q=Pompki']) {
+  for (const path of ['/profil', '/plany', '/plany/123', '/plany/nowy', '/plany/123/edytuj', '/cwiczenia?type=HOME&q=Pompki', '/trening?planId=123&dayId=9', '/progres', '/wspolpraca', '/trener?grupa=4']) {
     assert.equal(loginReturnPath(path), path)
   }
 })

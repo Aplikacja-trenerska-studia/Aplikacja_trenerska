@@ -17,7 +17,7 @@ Migracja `V4__seed_exercise_catalog.sql` dodaje **48 ćwiczeń** z polskimi nazw
 
 `STRENGTH` obejmuje warianty z typowym sprzętem siłowym: sztangą, hantlami, maszynami, wyciągiem lub kettlebell. `HOME` obejmuje warianty z masą ciała i prostym wyposażeniem; wymagane gumy, butelki, ręcznik lub drążek są wymienione w opisach. Jest to umowny podział wariantów według sprzętu. Grupa mięśniowa wskazuje główny obszar, a ćwiczenie może angażować również inne mięśnie. Wpisy opisują ruchy rozliczane powtórzeniami, zgodnie z obecnym modelem planu.
 
-Katalog jest wspólny, z `created_by = NULL`, i nie wymaga konta demonstracyjnego. Identyfikatory generuje baza; aplikacja nie powinna zakładać konkretnych numerów ID. Flyway wykonuje V4 raz na bazę, więc ponowne uruchomienie migracji/aplikacji nie powiela wpisów. Migracja dodaje dane do istniejącego katalogu, zachowując dotychczasowe ćwiczenia i odwołania w planach. Kolejne zmiany danych należy wprowadzać nowymi migracjami.
+Katalog jest wspólny, z `created_by = NULL`, i nie wymaga przypisania do konta. Identyfikatory generuje baza; aplikacja nie powinna zakładać konkretnych numerów ID. Flyway wykonuje V4 raz na bazę, więc ponowne uruchomienie migracji/aplikacji nie powiela wpisów. Migracja dodaje dane do istniejącego katalogu, zachowując dotychczasowe ćwiczenia i odwołania w planach. Kolejne zmiany danych należy wprowadzać nowymi migracjami.
 
 ## Integralność i kolejność
 

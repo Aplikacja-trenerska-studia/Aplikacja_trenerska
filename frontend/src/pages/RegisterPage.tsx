@@ -7,8 +7,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { registerUser } from '@/lib/auth-api'
 import { Notice } from '@/components/ui/notice'
-import { MailDemoNotice } from '@/components/ui/mail-demo-notice'
-import { isMailDemo } from '@/lib/mail-mode'
 import { passwordError } from '@/lib/password-validation'
 import type { ApiError } from '@/types/auth'
 
@@ -28,7 +26,7 @@ export function RegisterPage() {
     setLoading(true)
     try {
       const response = await registerUser({ email: email.trim(), password, displayName: displayName.trim() })
-      setMessage(isMailDemo ? 'Konto zostało utworzone. Aktywuj je za pomocą linku udostępnionego przez prowadzącego prezentację.' : response.message)
+      setMessage(response.message)
       setPassword('')
     } catch (err) {
       const apiErr = err as ApiError
@@ -45,8 +43,8 @@ export function RegisterPage() {
         <CardDescription>{message ? 'Jeszcze jeden krok — potwierdź adres e-mail.' : 'Utwórz konto w aplikacji trenerskiej.'}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
-        <MailDemoNotice />
-        {message ? <div className="space-y-5"><Notice variant="mail">{message}</Notice><p className="text-sm text-muted-foreground">{isMailDemo ? 'Otwórz otrzymany link aktywacyjny, a następnie potwierdź operację.' : 'Sprawdź skrzynkę odbiorczą i spam, a następnie otwórz link aktywacyjny.'}</p><Button className="h-auto min-h-10 w-full whitespace-normal text-center" asChild variant="outline"><Link to="/confirm-email">{isMailDemo ? 'Poproś o nowy link aktywacyjny' : 'Wyślij ponownie link aktywacyjny'}</Link></Button><Button className="w-full" asChild><Link to="/logowanie">Przejdź do logowania</Link></Button></div> : <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+
+        {message ? <div className="space-y-5"><Notice variant="mail">{message}</Notice><p className="text-sm text-muted-foreground">{'Sprawdź skrzynkę odbiorczą i spam, a następnie otwórz link aktywacyjny.'}</p><Button className="h-auto min-h-10 w-full whitespace-normal text-center" asChild variant="outline"><Link to="/confirm-email">{'Wyślij ponownie link aktywacyjny'}</Link></Button><Button className="w-full" asChild><Link to="/logowanie">Przejdź do logowania</Link></Button></div> : <form className="flex flex-col gap-4" onSubmit={onSubmit}>
           <div className="space-y-2">
             <Label htmlFor="displayName">Imię lub nazwa wyświetlana</Label>
             <Input

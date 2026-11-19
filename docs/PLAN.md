@@ -11,7 +11,7 @@
 
 > **Legenda:** sekcje oznaczone 📄 pochodzą wprost z formularza SMART. Sekcje oznaczone 💡 to propozycje techniczne (do uzgodnienia w zespole).
 
-> **Stan checklist: 16.11.2026.** Trwa Sprint 2 (16–22.11); konta i plany są technicznie gotowe. Wdrożenie na Vercel i Supabase należy do zadania **S3-11 w Sprincie 3 (23–29.11)** i zostało wykonane z wyprzedzeniem **16.11.2026**. Kod produkcyjny jest w `main`. `[x]` potwierdza opisany zakres techniczny; zespołowe review i Definition of Done całego projektu nadal wymagają osobnego potwierdzenia. Szczegóły: [SPRINTY.md](SPRINTY.md).
+> **Stan checklist: 19.11.2026.** Konta i plany ze Sprintu 2 oraz funkcje progresu i trenera ze Sprintu 3 są technicznie gotowe i sprawdzone lokalnie. Implementację S3 przygotowano 19.11 na `feat/sprint-3`; publikację, wdrożenie i odbiór rozliczamy osobno w [checkliście S3](SPRINTY.md#publikacja-i-odbiór-s3). Harmonogram **S3: 23–29.11** pozostaje bez zmian. Pierwsze wdrożenie Vercel/Supabase (**S3-11**) wykonano **16.11.2026**. `[x]` potwierdza opisany zakres techniczny; zespołowe review i Definition of Done wymagają osobnego potwierdzenia. Szczegóły: [SPRINTY.md](SPRINTY.md), [SPRINT3.md](SPRINT3.md).
 
 ---
 
@@ -34,8 +34,8 @@ Dla zespołu to także nauka pełnego cyklu tworzenia aplikacji: backend + front
 |---|---|---|
 | Frontend | React + TypeScript + Vite, Tailwind CSS | ✅ ustalone |
 | Backend | Java + **Spring Boot** | ✅ ustalone |
-| Baza danych | **PostgreSQL**; lokalnie TimescaleDB, online Supabase PostgreSQL 17 | ✅ obecne moduły; technologia pomiarów online do decyzji przed S3 |
-| Wdrożenie | **Docker Compose** lokalnie; **Vercel + Supabase** online | ✅ działa; produkcja z `main`, poczta w trybie demo |
+| Baza danych | **PostgreSQL**; lokalnie TimescaleDB, online Supabase PostgreSQL 17 | ✅ wspólny model pomiarów i V5–V7 sprawdzone na PostgreSQL 17 oraz TimescaleDB/PostgreSQL 16; zastosowanie migracji produkcyjnych potwierdza checklista S3 |
+| Wdrożenie | **Docker Compose** lokalnie; **Vercel + Supabase** online | ✅ hosting uruchomiony 16.11, wdrożenia z `main`; potwierdzony transport poczty: `log`, bez wysyłki wiadomości |
 
 ### Decyzja dotycząca frontendu
 
@@ -53,6 +53,8 @@ W sprincie 1 wybrano **React + Vite**. Frontend używa TypeScriptu, React Router
 └──────────────┘                           └───────────────────┘                └──────────────────────────┘
         └──────────────── każdy element w osobnym kontenerze Docker ───────────────────┘
 ```
+
+Lokalnie V7 tworzy hypertabele wyników i pomiarów, jeśli serwer udostępnia rozszerzenie TimescaleDB. W Supabase PostgreSQL 17 te same tabele pozostają zwykłymi tabelami z indeksami czasu. API i interfejs użytkownika są wspólne dla obu wariantów; aplikacja nie wymaga funkcji SQL dostępnych wyłącznie w TimescaleDB.
 
 ### Proponowana struktura repozytorium
 
@@ -95,12 +97,13 @@ Priorytety (zgodnie z założeniem etapowej realizacji z formularza):
 - [ ] Potwierdzenie zespołowego procesu PR i review zmian
 - [x] `docker-compose.yml`: `db` (TimescaleDB), `backend`, `frontend`, lokalny SMTP Mailpit
 - [x] Flyway: migracje V1/V2 kont i tokenów, V3 ćwiczeń i planów, V4 katalogu ćwiczeń oraz `.env.example`
+- [x] V5: wyniki i pomiary, V6: grupy i przypisania, V7: warunkowe włączenie hypertabel; aktualizacja V4 → V7 zachowuje istniejące konto i plan, ponowny start nie wykonuje migracji drugi raz
 - [x] Aplikacja uruchamia się jedną komendą: `docker compose up --build`
 - [x] Layout responsywny (mobile-first) obecnych ekranów kont, sprawdzony na komputerze i w emulowanym widoku mobilnym
 - [x] Frontend i backend na Vercelu, baza Supabase w schemacie `training_app`, HTTPS i CORS (S3-11, wykonano z wyprzedzeniem 16.11.2026)
 - [x] Migracje V1–V4 i 48 ćwiczeń w Supabase; przeniesienie jedynego lokalnego konta z kopiami zapasowymi poza GitHubem
 - [x] Automatyczne wdrożenia obu projektów z `main`; `feat/deployment` scalony i usunięty
-- [x] Demonstracja bez SMTP: linki kont w prywatnych logach backendu, odpowiednie komunikaty frontendu
+- [x] Backend obsługuje opcjonalny transport `APP_MAIL_MODE=log`, który zapisuje linki kont w prywatnych logach bez wysyłania wiadomości
 - [x] Sprawdzenia online: strony SPA, API `UP`, odczyt bazy, ochrona tras i CORS
 
 Adres aplikacji: [aplikacja-trenerska.vercel.app](https://aplikacja-trenerska.vercel.app). Konfiguracja i zakres potwierdzonych testów: [DEPLOYMENT.md](DEPLOYMENT.md).
@@ -115,11 +118,12 @@ Adres aplikacji: [aplikacja-trenerska.vercel.app](https://aplikacja-trenerska.ve
 - [x] Usunięcie konta po ponownym podaniu hasła i potwierdzeniu przez e-mail
 - [x] Ochrona obecnych endpointów użytkownika przez JWT i `@PreAuthorize`, ochrona trasy `/profil`
 - [x] Autoryzacja katalogu i CRUD planów według ról i właściciela z sesji; testy odmowy dostępu do cudzych planów
-- [ ] Autoryzacja przyszłych endpointów modułu trenera i kolejnych modułów podczas ich wdrażania
+- [x] Autoryzacja endpointów progresu i trenera według właściciela, roli i zaakceptowanego członkostwa; testy odmowy dostępu i odebrania zgody po opuszczeniu grupy
+- [ ] Autoryzacja kolejnych modułów podczas ich wdrażania
 
 Implementacja kont i kontrakt API: [ACCOUNTS.md](ACCOUNTS.md). Reset hasła unieważnia wcześniejsze JWT; jednorazowe tokeny mają przeznaczenie, termin ważności i skrót w bazie. Zaliczone sprawdzenia backendu na H2 i PostgreSQL 16: 111 testów (15 kont, 7 ról, 25 modelu planów, 3 katalogu, 19 API ćwiczeń, 41 API planów i uruchomienie kontekstu), w tym CRUD i izolacja własnych planów, walidacja oraz usuwanie konta z planem przy zachowaniu katalogu. Sprawdzono także aktualizacje V2 → V3 → V4 z istniejącymi danymi. Wcześniej sprawdzono 4 testy pomocniczych funkcji frontendu, build i lint frontendu oraz przepływy kont przez nginx z PostgreSQL i rzeczywistą wysyłką SMTP do Mailpit (`tests/smoke-accounts.mjs`). Potwierdzono również obejście crasha Brave podczas wpisywania nicku (`autocomplete="off"`).
 
-Mailpit przechwytuje wiadomości lokalnie. Wdrożenie demonstracyjne korzysta z `APP_MAIL_MODE=log`: linki trafiają do prywatnych logów API, a frontend pokazuje tryb demo. Rzeczywista wysyłka wymaga zewnętrznego SMTP. Pełne przepływy kont i planów są sprawdzone lokalnie; ich powtórzenie online na koncie testowym pozostaje na checkliście odbioru wdrożenia w Sprincie 3 (S3-11). Najnowsze sprawdzenie lokalne konfiguracji obejmuje 157 testów backendu, 21 testów frontendu, build i lint.
+Mailpit przechwytuje wiadomości lokalnie. Ostatnio potwierdzone wdrożenie korzystało z `APP_MAIL_MODE=log`: linki trafiały do prywatnych logów API. Rzeczywista wysyłka wymaga zewnętrznego SMTP; wybór transportu nie zmienia interfejsu użytkownika. Pełne przepływy kont, planów i S3 sprawdzono lokalnie; ich powtórzenie online na koncie testowym pozostaje na checkliście odbioru S3-11. Weryfikacja z 19.11: po 216 testów backendu bez błędów na PostgreSQL 17 i TimescaleDB/PostgreSQL 16; na H2 215 zaliczonych i 1 celowo pominięty test wymagający PostgreSQL. Frontend: 27 testów, build i lint zaliczone. Szczegóły i powtarzalne polecenia: [SPRINT3.md](SPRINT3.md).
 
 ### M2. Moduł użytkownika — plany treningowe (P1)
 
@@ -136,17 +140,24 @@ Schemat, katalog i zasady integralności: [WORKOUT_MODEL.md](WORKOUT_MODEL.md). 
 
 ### M3. Śledzenie postępów (P1)
 
-- [ ] Zapis wyników ćwiczeń (ciężar, powtórzenia, data)
-- [ ] Zapis wagi ciała
-- [ ] Zapis obwodów ciała
-- [ ] Historia i wykresy progresu (dane w hypertables TimescaleDB)
+- [x] Zapis treningu z wybranego planu i dnia: serie, powtórzenia, ciężar i data; cały zapis w jednej transakcji
+- [x] Zapis wagi ciała
+- [x] Zapis obwodów: klatka, talia, biodra, ramię i udo
+- [x] Historia z filtrami dat i ćwiczenia, usuwanie błędnych wpisów oraz wykresy ciężaru, wagi i obwodów
+- [x] Hypertabele TimescaleDB lokalnie i zgodny wariant zwykłych tabel na Supabase PostgreSQL 17 (V5/V7)
+
+Zakres M3 zaimplementowano i sprawdzono na `feat/sprint-3` 19.11.2026. Wyniki zachowują nazwę planu, dnia i ćwiczenia z chwili zapisu, także po edycji lub usunięciu planu. Odczyt jest ograniczony do własnego konta; uprawniony trener otrzymuje dostęp dopiero po akceptacji zaproszenia przez podopiecznego. Zapis treningu, pomiarów i odczyt wykresów przeszedł w pełnym stacku Docker przez UI; potwierdzono dwie rzeczywiste hypertabele na TimescaleDB. Publikację i odbiór dokumentuje osobna [checklista S3](SPRINTY.md#publikacja-i-odbiór-s3).
 
 ### M4. Moduł trenera (P1/P2)
 
-- [ ] Konto trenera
-- [ ] Tworzenie **grup podopiecznych**
-- [ ] Przypisywanie planów treningowych do grupy / osoby
-- [ ] Podgląd progresu podopiecznych
+- [x] Rola trenera nadawana istniejącemu kontu przez operatora (S2-04)
+- [x] Tworzenie i usuwanie własnych **grup podopiecznych**
+- [x] Zaproszenie po e-mailu, akceptacja w aplikacji, odrzucenie zaproszenia i opuszczenie grupy
+- [x] Przypisywanie własnego planu osobie lub zaakceptowanym członkom grupy
+- [x] Lista przypisanych planów u podopiecznego i możliwość wykonania treningu z otrzymanego planu
+- [x] Podgląd wyników, pomiarów i wykresów zaakceptowanego podopiecznego; odebranie dostępu po opuszczeniu grupy
+
+Nowe funkcje M4 zaimplementowano i sprawdzono na `feat/sprint-3` 19.11.2026. Przypisanie tworzy niezależną kopię planu na koncie podopiecznego. Zmiany planu źródłowego i usunięcie konta trenera nie usuwają cudzej kopii. Usunięcie konta obejmuje własny progres, pomiary, grupy i członkostwa oraz powiązane przypisania; dane pozostałych kont pozostają. Test pełnego przepływu potwierdził zaproszenie, akceptację, przypisanie kopii, wykonanie z niej treningu i odebranie podglądu po opuszczeniu grupy. Publikacja kodu i odbiór produkcyjny są rozliczane niezależnie od tych testów.
 
 ### M5. Udostępnianie i ocena planów (P2)
 
@@ -175,21 +186,22 @@ verification_tokens (id, user_id, token, type, expires_at)   -- potwierdzenie ko
 
 -- Trener i grupy
 training_groups  (id, trainer_id → users, name, created_at)
-group_members    (group_id → training_groups, user_id → users)
+group_members    (group_id → training_groups, user_id → users, status, invited_at, accepted_at)
 
 -- Ćwiczenia i plany
 exercises        (id, name, muscle_group, type, description, created_by)
 workout_plans    (id, owner_id → users, name, description, is_shared, created_at)
 plan_days        (id, plan_id → workout_plans, day_index, name)
 plan_exercises   (id, plan_day_id → plan_days, exercise_id, sets, reps, weight, order_index)
-plan_assignments (id, plan_id, user_id NULL, group_id NULL, assigned_by, assigned_at)
+plan_assignments (id, group_id, user_id, source_plan_id NULL, copied_plan_id NULL,
+                  assigned_by, plan_name, assigned_at)
 
--- Szeregi czasowe → TimescaleDB hypertables
-exercise_results (time TIMESTAMPTZ, user_id, exercise_id, set_no, reps, weight)
-body_metrics     (time TIMESTAMPTZ, user_id, weight_kg, chest_cm, waist_cm, hips_cm, arm_cm, thigh_cm)
+-- Szeregi czasowe; klucz główny obu tabel: (id UUID, time TIMESTAMPTZ)
+exercise_results (id, time, user_id, exercise_id, exercise_name, plan_name, day_name, set_no, reps, weight)
+body_metrics     (id, time, user_id, weight_kg, chest_cm, waist_cm, hips_cm, arm_cm, thigh_cm)
 
-SELECT create_hypertable('exercise_results', 'time');
-SELECT create_hypertable('body_metrics', 'time');
+-- V7 wywołuje create_hypertable tylko, gdy serwer udostępnia TimescaleDB.
+-- Supabase PostgreSQL 17 zachowuje zwykłe tabele z indeksami użytkownika i czasu.
 ```
 
 ---
@@ -211,12 +223,22 @@ SELECT create_hypertable('body_metrics', 'time');
 | GET/POST | `/api/plans` | Lista / tworzenie własnych planów — wdrożone | USER / TRAINER / ADMIN |
 | GET/PUT/DELETE | `/api/plans/{id}` | Szczegóły / edycja / usunięcie własnego planu — wdrożone | USER / TRAINER / ADMIN |
 | POST | `/api/plans/{id}/share` | Udostępnienie planu | USER |
-| POST | `/api/results` | Zapis wyniku ćwiczenia | USER |
-| GET | `/api/results?exerciseId=&from=&to=` | Historia wyników | USER |
-| POST/GET | `/api/body-metrics` | Waga / obwody | USER |
-| POST/GET | `/api/groups` | Grupy trenera | TRAINER |
-| POST | `/api/groups/{id}/members` | Dodanie podopiecznego | TRAINER |
-| POST | `/api/groups/{id}/assign-plan` | Przypisanie planu | TRAINER |
+| POST | `/api/results` | Atomowy zapis serii wybranego dnia własnego planu — S3 | USER / TRAINER / ADMIN |
+| GET | `/api/results?exerciseId=&from=&to=` | Własna historia wyników, najnowsze maks. 2000 wpisów — S3 | USER / TRAINER / ADMIN |
+| DELETE | `/api/results/{id}?time=` | Usunięcie własnego wyniku — S3 | USER / TRAINER / ADMIN |
+| POST/GET | `/api/body-metrics` | Zapis / historia wagi i obwodów, najnowsze maks. 500 wpisów — S3 | USER / TRAINER / ADMIN |
+| DELETE | `/api/body-metrics/{id}?time=` | Usunięcie własnego pomiaru — S3 | USER / TRAINER / ADMIN |
+| GET/POST | `/api/groups` | Lista / tworzenie własnych grup — S3 | TRAINER |
+| GET/DELETE | `/api/groups/{id}` | Szczegóły / usunięcie własnej grupy — S3 | TRAINER |
+| POST | `/api/groups/{id}/members` | Zaproszenie podopiecznego po e-mailu — S3 | TRAINER |
+| DELETE | `/api/groups/{id}/members/{userId}` | Usunięcie członkostwa — S3 | TRAINER |
+| POST | `/api/groups/{id}/assign-plan` | Kopia własnego planu dla zaakceptowanej osoby lub grupy — S3 | TRAINER |
+| GET | `/api/groups/{id}/members/{userId}/results` | Progres zaakceptowanego podopiecznego — S3 | TRAINER |
+| GET | `/api/groups/{id}/members/{userId}/body-metrics` | Pomiary zaakceptowanego podopiecznego — S3 | TRAINER |
+| GET | `/api/my-invitations` | Własne zaproszenia i członkostwa — S3 | USER / TRAINER / ADMIN |
+| POST | `/api/my-invitations/{groupId}/accept` | Akceptacja zaproszenia — S3 | USER / TRAINER / ADMIN |
+| DELETE | `/api/my-invitations/{groupId}` | Odrzucenie zaproszenia / opuszczenie grupy — S3 | USER / TRAINER / ADMIN |
+| GET | `/api/my-assignments` | Własne przypisania planów — S3 | USER / TRAINER / ADMIN |
 | GET | `/api/calc/1rm?weight=&reps=` | Kalkulator 1RM | USER |
 | GET | `/api/calc/calories` | Zapotrzebowanie kaloryczne | USER |
 
@@ -267,13 +289,13 @@ volumes:
 Postęp oceniamy za pomocą następujących wskaźników:
 
 - [ ] **≥ 6 modułów** zrealizowanych (w stosunku do zaplanowanych w zakresie projektu)
-- [ ] **Działające, przetestowane przepływy kluczowe:**
+- [x] **Działające, przetestowane przepływy kluczowe lokalnie:**
   - [x] rejestracja, potwierdzenie e-maila i logowanie; dodatkowo reset hasła i usuwanie konta
   - [x] utworzenie planu treningowego przez kreator, edycja i usunięcie z potwierdzeniem
-  - [ ] zapis wyniku treningu
-  - [ ] utworzenie grupy przez trenera i przypisanie planu podopiecznemu
-- [ ] Aplikacja **poprawnie wyświetla się i działa na komputerach i urządzeniach mobilnych** — ekrany kont sprawdzone na komputerze i w emulacji; pozostałe moduły i test na prawdziwym telefonie jeszcze przed zespołem
-- [x] Obecna aplikacja **uruchamia się w kontenerach Docker** (backend, baza danych, frontend, Mailpit); migracje V1–V4 oraz przepływy kont i planów sprawdzone
+  - [x] zapis wyniku treningu, pomiarów i odczyt historii oraz wykresów
+  - [x] utworzenie grupy przez trenera, akceptacja zaproszenia, przypisanie kopii planu, wykonanie treningu z kopii i odebranie dostępu po opuszczeniu grupy
+- [ ] Aplikacja **poprawnie wyświetla się i działa na komputerach i urządzeniach mobilnych** — nowe ekrany sprawdzono przy 1280 × 900 i 375 × 812 bez poziomego przewijania i błędów JavaScript; test na prawdziwym telefonie pozostaje do wykonania
+- [x] Obecna aplikacja **uruchamia się w kontenerach Docker** (backend, baza danych, frontend, Mailpit); migracje V1–V7 oraz pełny przepływ rejestracja → plan → wynik → współpraca z trenerem sprawdzone lokalnie
 - [x] Obecna aplikacja jest dostępna online na Vercelu z bazą Supabase i wdrożeniami produkcyjnymi z `main`; sprawdzono dostępność, odczyt bazy, CORS i ochronę tras (S3-11, wykonano 16.11.2026)
 - [ ] **Cotygodniowe podsumowanie postępów** w zespole, z odniesieniem do listy zadań
 
@@ -291,7 +313,7 @@ Harmonogram jest zgodny z operacyjnym podziałem zadań w [SPRINTY.md](SPRINTY.m
 | **S2** | 16–22.11 | Konta i plany | Potwierdzenie e-maila, reset hasła, usuwanie konta, role (M1); baza ćwiczeń, CRUD planów i widoki mobile (M2) |
 | **S3** | 23–29.11 | Progres, trener i wdrożenie | Wyniki, waga, obwody, wykresy (M3); grupy trenera i przypisywanie planów (M4); Vercel i Supabase (S3-11, wykonano z wyprzedzeniem 16.11) |
 | **S4** | 30.11–6.12 | Dodatki | Udostępnianie planów, kalkulatory, kalendarz, statystyki (M5, M6) |
-| **S5** | 7–13.12 | Stabilizacja | Algorytm oceny planów, testy mobile, poprawki, dokumentacja i dane demo |
+| **S5** | 7–13.12 | Stabilizacja | Algorytm oceny planów, testy mobile, poprawki, dokumentacja i dane przykładowe |
 | **Bufor** | 14–19.12 | Oddanie | Tylko poprawki, dokumentacja, finalny `docker compose up` i oddanie |
 
 > **Zasada:** po Sprincie 4 zamrażamy nowe moduły. Sprint 5 i bufor służą stabilizacji; priorytety P1 muszą być ukończone przed dodatkami.
@@ -306,7 +328,8 @@ Harmonogram jest zgodny z operacyjnym podziałem zadań w [SPRINTY.md](SPRINTY.m
 | Brak doświadczenia z frameworkiem frontendowym | Wysoki | Szybki wybór w T1, nauka na małych zadaniach, gotowa biblioteka UI |
 | Szeroki zakres funkcjonalny | Średni | Realizacja etapami: **1)** web + konta + plany trenera/użytkownika, **2)** kalendarz, kalkulatory, statystyki, udostępnianie, **3)** social, mini-Fitatu, wydarzenia |
 | Nowa technologia: TimescaleDB | Średni | Standardowy PostgreSQL + `create_hypertable` tylko dla tabel pomiarów |
-| TimescaleDB w hostingu Supabase | Wysoki dla S3 | Obecne wdrożenie używa PostgreSQL 17 bez TimescaleDB; przed modułem progresu uzgodnić rozwiązanie pomiarów lub inny hosting bazy ([szczegóły](DEPLOYMENT.md#preview-i-kolejne-migracje)) |
+| Dwa warianty bazy pomiarów | Średni | Hypertabele TimescaleDB w Dockerze oraz zwykłe tabele na Supabase PostgreSQL 17. V7 rozpoznaje rozszerzenie; oba warianty i aktualizację V4 → V7 sprawdzono lokalnie. Po wdrożeniu trzeba potwierdzić migracje na produkcji ([szczegóły](DEPLOYMENT.md#preview-i-kolejne-migracje)) |
+| Dostęp trenera do danych podopiecznych | Wysoki | Wymagana akceptacja zaproszenia; opuszczenie grupy odbiera podgląd. Testy izolacji kont, grup i usuwania relacji są częścią S3 |
 | Konfiguracja Dockera | Średni | Docker Compose uruchomiony już w T1, nie na koniec |
 
 ---
@@ -349,13 +372,13 @@ Zadanie uznajemy za skończone, gdy:
 | Moduł | Osoba | Status |
 |---|---|---|
 | M0 Infrastruktura / Docker | | 🟡 Docker i Vercel/Supabase działają, produkcja z `main`; proces PR i zespołowe review do potwierdzenia |
-| M1 Konta i autoryzacja | | ✅ przepływy kont, operatorowe nadawanie roli trenera i testy obecnych uprawnień gotowe; nowe endpointy wymagają zabezpieczenia podczas implementacji |
+| M1 Konta i autoryzacja | | ✅ przepływy kont, operatorowe nadawanie roli trenera i nowe reguły dostępu S3 sprawdzone lokalnie |
 | M2 Plany treningowe | | ✅ model, katalog, API, listy, kreator, edycja i usuwanie gotowe; pełny przepływ UI sprawdzony w Dockerze |
-| M3 Progres | | ☐ do wykonania |
-| M4 Moduł trenera | | ☐ do wykonania |
+| M3 Progres | | ✅ technicznie gotowe i sprawdzone lokalnie 19.11; publikacja i odbiór w osobnej checkliście S3 |
+| M4 Moduł trenera | | ✅ technicznie gotowe i sprawdzone lokalnie: zaproszenia z akceptacją i niezależne kopie planów; publikacja i odbiór w osobnej checkliście S3 |
 | M5 Udostępnianie i ocena planów | | ☐ do wykonania |
 | M6 Moduły dodatkowe | | ☐ do wykonania |
-| Frontend (UI/UX, mobile) | | 🟡 konta i cały zakres UI planów S2 gotowe; kolejne moduły do wykonania; widoki sprawdzone w desktopie i emulowanym układzie mobilnym, rzeczywisty telefon pozostaje do sprawdzenia |
+| Frontend (UI/UX, mobile) | | 🟡 konta, plany oraz nowe ekrany treningu, progresu i trenera sprawdzone na desktopie i w mobilnym widoku przeglądarki; rzeczywisty telefon pozostaje do sprawdzenia |
 
 ---
 
