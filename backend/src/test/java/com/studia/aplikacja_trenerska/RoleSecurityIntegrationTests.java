@@ -152,11 +152,11 @@ class RoleSecurityIntegrationTests {
         return mvc.perform(builder);
     }
 
-    // Test-only routes: exercise URL rules and method security independently; no demo API in production.
+    // Test-only routes exercise URL rules and method security independently.
     @RestController
     @TestComponent
     public static class AccessProbe {
-        @GetMapping({"/api/trainer", "/api/trainer/probe", "/api/groups", "/api/groups/1/members"})
+        @GetMapping({"/api/trainer", "/api/trainer/probe", "/api/groups/1/members"})
         public String urlGuard() { return "ok"; }
 
         @GetMapping("/api/security-test/trainer")

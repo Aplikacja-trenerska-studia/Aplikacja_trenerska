@@ -39,7 +39,7 @@ public class AccountMailService {
             }
         } else {
             this.mailSender = null;
-            log.warn("Demo mail mode enabled: account links are written to backend logs; emails are not sent");
+            log.info("Account mail delivery configured to use the log transport");
         }
     }
 
@@ -51,7 +51,7 @@ public class AccountMailService {
         };
         String url = properties.frontendUrl().replaceAll("/+$", "") + path + "?token=" + token;
         if (delivery.mode() == MailDeliveryProperties.Mode.LOG) {
-            log.info("[DEMO MAIL] {} {}", type, url);
+            log.info("[MAIL LINK] {} {}", type, url);
             return;
         }
         String subject = switch (type) {

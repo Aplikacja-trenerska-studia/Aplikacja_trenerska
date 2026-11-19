@@ -15,6 +15,11 @@ import { PlansPage } from '@/pages/PlansPage'
 import { PlanDetailsPage } from '@/pages/PlanDetailsPage'
 import { PlanCreatePage } from '@/pages/PlanCreatePage'
 import { PlanEditPage } from '@/pages/PlanEditPage'
+import { WorkoutSessionPage } from '@/pages/WorkoutSessionPage'
+import { ProgressPage } from '@/pages/ProgressPage'
+import { CollaborationPage } from '@/pages/CollaborationPage'
+import { TrainerPage } from '@/pages/TrainerPage'
+import { TrainerRoute } from '@/components/routing/TrainerRoute'
 
 export default function App() {
   return (
@@ -29,6 +34,12 @@ export default function App() {
             <Route path="/plany/nowy" element={<PlanCreatePage />} />
             <Route path="/plany/:id/edytuj" element={<PlanEditPage />} />
             <Route path="/plany/:id" element={<PlanDetailsPage />} />
+            <Route path="/trening" element={<WorkoutSessionPage />} />
+            <Route path="/progres" element={<ProgressPage />} />
+            <Route path="/wspolpraca" element={<CollaborationPage />} />
+            <Route element={<TrainerRoute />}>
+              <Route path="/trener" element={<TrainerPage />} />
+            </Route>
           </Route>
           <Route element={<GuestRoute />}>
             <Route path="/logowanie" element={<LoginPage />} />

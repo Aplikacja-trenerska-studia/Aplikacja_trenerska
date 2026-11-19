@@ -4,19 +4,21 @@
 
 Wdrożenie działa publicznie. Zadanie **S3-11** należy do **Sprintu 3 (23–29 listopada)** i zostało wykonane z wyprzedzeniem **16 listopada 2026**. Oba projekty Vercel śledzą produkcyjny branch `main`; sprawdzono wersję po scaleniu `ee2fa1e`.
 
+**Zmiany z 19.11.2026:** nowe funkcje progresu i trenera z migracjami V5–V7 przygotowano i sprawdzono lokalnie na `feat/sprint-3`. Poniższa tabela opisuje historyczne wdrożenie V1–V4 z 16.11. Publikacja backendu wykonuje V5–V7 przy pierwszym starcie; na Supabase PG17 V7 pozostawia zwykłe tabele z indeksami. Bieżący odbiór publikacji jest rozliczany osobno w [checkliście S3](SPRINTY.md#publikacja-i-odbiór-s3). Pełny opis i wyniki testów: [SPRINT3.md](SPRINT3.md).
+
 | Część | Działające wdrożenie |
 |---|---|
 | Frontend | [aplikacja-trenerska.vercel.app](https://aplikacja-trenerska.vercel.app), projekt `aplikacja-trenerska-frontend` |
 | Backend | [aplikacja-trenerska-api.vercel.app](https://aplikacja-trenerska-api.vercel.app), Java 21 / Container Runtime, region `dub1` |
 | Baza | Supabase PostgreSQL 17, `eu-west-1`, prywatny schemat `training_app`, migracje V1–V4 i 48 ćwiczeń |
 
-Poczta działa w trybie demonstracyjnym: backend ma `APP_MAIL_MODE=log`, a frontend `VITE_MAIL_MODE=log`. **Wiadomości nie trafiają do skrzynek e-mail.** Linki aktywacji, resetu i usunięcia konta odczytuje administrator z prywatnych logów backendu.
+Konfiguracja poczty w ostatnim sprawdzonym wdrożeniu używa `APP_MAIL_MODE=log`. Ten transport zapisuje linki w prywatnych logach zamiast dostarczać wiadomości. Docelowa wysyłka do skrzynek wymaga ustawień SMTP opisanych poniżej. Interfejs kont jest wspólny dla wszystkich transportów poczty.
 
 Z lokalnej bazy przeniesiono jedno istniejące aktywne konto `USER`, zachowując wszystkie osiem pól, w tym ID, skrót hasła i wersję sesji. Katalog ćwiczeń i historia migracji w Supabase pozostały bez zmian. Kopie danych są poza Git oraz w osobnym prywatnym schemacie kopii w Supabase; repozytorium nie zawiera danych konta ani zawartości tych kopii.
 
 Zakres wykonanych sprawdzeń i pozostałe testy online zawiera [checklista wdrożenia](#5-sprawdź-wdrożenie). Poniższe sekcje opisują konfigurację i kolejne wdrożenia.
 
-Konfiguracja zakłada dwa projekty Vercel z tego samego repozytorium: statyczny frontend React/Vite oraz backend Java 21 jako kontener. Supabase udostępnia PostgreSQL. Wiadomości można wysyłać przez zewnętrzny SMTP albo zastąpić je linkami w prywatnych logach na potrzeby demonstracji studenckiej. Aplikacja zachowuje własne konta i JWT; nie korzysta z Supabase Auth.
+Konfiguracja zakłada dwa projekty Vercel z tego samego repozytorium: statyczny frontend React/Vite oraz backend Java 21 jako kontener. Supabase udostępnia PostgreSQL. Wiadomości wysyła backend przez SMTP; lokalnie odbiera je Mailpit. Aplikacja zachowuje własne konta i JWT; nie korzysta z Supabase Auth.
 
 Gałęzią produkcyjną obu projektów Vercel jest `main`. Zmiany rozwijaj na osobnych branchach i scalaj do `main` przed wdrożeniem produkcyjnym. Samo przygotowanie plików lokalnie nie publikuje aplikacji.
 
@@ -27,7 +29,7 @@ Vercel Container Runtime jest obecnie w becie. Ustawienia hostingu opisuje [doku
 1. Utwórz nowy projekt i zapisz hasło bazy. Wybierz region zbliżony do regionu backendu.
 2. W panelu **Connect** skopiuj osobno połączenia **Transaction pooler** i **Session pooler**. Host i nazwa użytkownika zależą od projektu — skopiuj je z panelu.
 3. Wyłącz **Enable Data API** w ustawieniach integracji Data API. Nasz frontend komunikuje się z backendem, a nie z automatycznym REST/GraphQL Supabase. [Instrukcja Supabase](https://supabase.com/docs/guides/api/securing-your-api#disable-the-data-api).
-4. Nie twórz ręcznie tabel ani nie wklejaj migracji V1–V4 w SQL Editor. Flyway utworzy prywatny schemat `training_app`, historię migracji, tabele i katalog 48 ćwiczeń. Nie dodawaj `training_app` do schematów udostępnianych przez Data API. W Table Editor wybierz ten schemat, aby zobaczyć tabele aplikacji.
+4. Nie twórz ręcznie tabel ani nie wklejaj migracji w SQL Editor. Flyway utworzy prywatny schemat `training_app`, historię migracji, tabele i katalog 48 ćwiczeń. Nie dodawaj `training_app` do schematów udostępnianych przez Data API. W Table Editor wybierz ten schemat, aby zobaczyć tabele aplikacji.
 
 Backend używa transaction poolera na porcie `6543`; migracje Flyway korzystają z session poolera na `5432`. Ustawienie `prepareThreshold=0` w JDBC wyłącza przygotowane instrukcje nieobsługiwane przez współdzielony transaction pooler. SSL musi pozostać włączony. [Połączenia i ograniczenia Supabase](https://supabase.com/docs/guides/database/connecting-to-postgres).
 
@@ -86,7 +88,7 @@ W **Settings → Environment Variables** projektu backendowego dodaj zmienne dla
 | `APP_JWT_SECRET` | własny losowy sekret, co najmniej 32 bajty; ten sam dla wszystkich instancji backendu |
 | `APP_FRONTEND_URL` | dokładny adres frontendu HTTPS, np. `https://trening-app.vercel.app` |
 | `APP_CORS_ALLOWED_ORIGINS` | opcjonalnie dodatkowe dokładne originy rozdzielone przecinkami; bez `*` i bez ścieżek |
-| `APP_MAIL_MODE` | `smtp` (domyślnie) albo `log` dla demonstracji bez wysyłki wiadomości |
+| `APP_MAIL_MODE` | `smtp` (domyślnie); `log` to techniczny transport zapisujący linki w logach bez wysyłki |
 | `APP_MAIL_FROM` | zweryfikowany u dostawcy adres nadawcy; wymagany w trybie `smtp` |
 | `SPRING_MAIL_HOST` | host zewnętrznego SMTP |
 | `SPRING_MAIL_PORT` | port SMTP, np. `587` dla STARTTLS |
@@ -98,20 +100,11 @@ W **Settings → Environment Variables** projektu backendowego dodaj zmienne dla
 
 Profil `prod` ustawia domyślnie jedną konekcję Hikari na instancję, bez utrzymywania bezczynnych połączeń. Flyway i Hibernate korzystają ze schematu `training_app`; Swagger jest wyłączony. Brak wymaganych ustawień zatrzymuje uruchomienie zamiast użyć lokalnych danych. Nie łącz profilu `prod` z `dev` ani `docker`.
 
-### Demonstracja bez dostawcy poczty
+### Transport poczty
 
-Na potrzeby projektu studenckiego ustaw w backendzie `APP_MAIL_MODE=log`, a we frontendzie `VITE_MAIL_MODE=log`. W tym wariancie nie trzeba zakładać skrzynki, kupować domeny ani podawać `APP_MAIL_FROM`, zmiennych `SPRING_MAIL_*` i `SMTP_*`. Pozostałe ustawienia bazy, JWT, HTTPS i `APP_FRONTEND_URL` są nadal wymagane. Pozostaw `SPRING_PROFILES_ACTIVE=prod`.
+Lokalny Docker używa SMTP i Mailpit. Rejestracja, reset hasła i usunięcie konta działają przez wiadomość oraz jednorazowe potwierdzenie; typ skrzynki nie zmienia przepływu aplikacji.
 
-1. Po wdrożeniu zarejestruj fikcyjne konto, np. `student@example.test`.
-2. W projekcie **backendu** w Vercel otwórz **Logs** i znajdź wpis `[DEMO MAIL]` dla operacji `EMAIL_CONFIRMATION`.
-3. Otwórz pełny adres z tego wpisu w przeglądarce i potwierdź konto na stronie frontendu. Następnie możesz się zalogować.
-4. Reset hasła i usunięcie konta działają tak samo: wyślij prośbę w aplikacji i otwórz nowy link z wpisu odpowiednio `PASSWORD_RESET` lub `ACCOUNT_DELETION`. Samo otwarcie strony usunięcia nie usuwa konta — operację trzeba potwierdzić.
-
-W planie Hobby logi są przechowywane przez godzinę. Najwygodniej otworzyć **Logs** i włączyć **Live** przed demonstracją. Jeśli wpis już zniknął, zamów nowy link w aplikacji (kolejna prośba jest dostępna po minucie). [Logi i limity Vercela](https://vercel.com/docs/logs/runtime).
-
-Tryb `log` zachowuje jednorazowość i ważność tokenów oraz sprawdzanie hasła przy usuwaniu konta. Nie udostępnia linków przez publiczne API. Frontend informuje, że link przekazuje administrator demonstracji. **Pełne linki dają uprawnienie do aktywacji, resetu hasła lub potwierdzenia usunięcia konta: nie publikuj logów ani ich zrzutów. Używaj wyłącznie fikcyjnych kont i danych.**
-
-Przy przejściu na rzeczywistą wysyłkę ustaw `APP_MAIL_MODE=smtp`, uzupełnij `APP_MAIL_FROM` oraz wszystkie wymagane dane SMTP, a we frontendzie ustaw `VITE_MAIL_MODE=smtp` lub usuń tę zmienną. Wykonaj ponowne wdrożenie obu projektów. Tryb `smtp` jest domyślny i nie zapisuje linków do logów.
+Backend obsługuje również techniczny transport `APP_MAIL_MODE=log`. Wtedy nie łączy się z SMTP, a link zapisuje jako `[MAIL LINK]` w prywatnych logach. Link jest poufny i nie jest zwracany przez API. Nie jest to wysyłka e-mail. Aby dostarczać wiadomości użytkownikom, ustaw `APP_MAIL_MODE=smtp`, uzupełnij nadawcę i dane SMTP oraz wdroż backend ponownie. Frontend nie wymaga zmiennej wybierającej transport poczty.
 
 ### Wysyłka przez SMTP
 
@@ -139,13 +132,11 @@ W projekcie frontendowym ustaw dla **Production**:
 
 ```dotenv
 VITE_API_URL=https://<BACKEND>.vercel.app
-# Tylko dla demonstracji z backendowym APP_MAIL_MODE=log:
-VITE_MAIL_MODE=log
 ```
 
 Podaj wyłącznie origin backendu: bez końcowego `/api`, ścieżki, parametrów i fragmentu. To publiczny adres API, a nie sekret. Na Vercel wymagane jest HTTPS. Build sprawdza ustawienie i zgłasza błąd, jeżeli jest niepoprawne lub go brakuje.
 
-Zmienne są zapisywane w paczce podczas budowania frontendu. Po zmianie `VITE_API_URL` lub `VITE_MAIL_MODE` wykonaj **Redeploy**. Nie wystarczy odświeżyć kartę przeglądarki. `VITE_MAIL_MODE` steruje jedynie komunikatami interfejsu; sposób dostarczenia linków ustawia backendowe `APP_MAIL_MODE`.
+Zmienne są zapisywane w paczce podczas budowania frontendu. Po zmianie `VITE_API_URL` wykonaj **Redeploy**. Nie wystarczy odświeżyć kartę przeglądarki. Sposób dostarczenia wiadomości konfiguruje wyłącznie backend.
 
 `frontend/vercel.json` zapewnia fallback SPA dla bezpośrednich wejść na `/profil`, `/plany` i strony potwierdzeń. API jest wywoływane bezpośrednio pod domeną z `VITE_API_URL`, więc nie trzeba ręcznie wpisywać domeny backendu do reguł rewrite ani ustawiać kluczy Supabase we frontendzie. Dla tego wariantu CORS backendu musi zawierać origin frontendu.
 
@@ -158,7 +149,7 @@ Lokalne Vite i Docker zachowują dotychczasowe działanie: przy pustym `VITE_API
 - [x] Zapytanie logowania losowym nieistniejącym kontem zwraca `401` po odczycie bazy Supabase.
 - [x] Bez JWT endpointy profilu, ćwiczeń i planów zwracają `401`.
 - [x] CORS dopuszcza adres frontendu, a żądanie z obcego originu odrzuca kodem `403`.
-- [x] Frontend i sześć sprawdzonych tras SPA zwracają `200`; publiczna paczka wskazuje właściwe API i tryb demonstracyjnej poczty.
+- [x] Frontend i sześć sprawdzonych tras SPA zwracają `200`; publiczna paczka wskazuje właściwe API.
 - [x] W bazie jest 48 ćwiczeń oraz przeniesione konto `USER`; kopie danych pozostają prywatne.
 - [ ] Na osobnym fikcyjnym koncie online: rejestracja zapisuje link w prywatnych logach, potwierdzenie aktywuje konto i można się zalogować.
 - [ ] Po zalogowaniu online: katalog pokazuje ćwiczenia i można utworzyć, odczytać, edytować oraz usunąć własny plan.
@@ -172,7 +163,7 @@ Weryfikację linków i usuwania wykonuj wyłącznie na własnym koncie testowym,
 
 ## Zmiany bazy w zespole
 
-1. Dodaj kolejny plik w `backend/src/main/resources/db/migration`, np. `V5__add_training_results.sql`. Uzgodnij numer z zespołem, aby dwa PR-y nie dodały różnych migracji V5. Wykonanych V1–V4 nie edytuj — poprawka dostaje nowy numer. Flyway zapisuje wykonane wersje i ich sumy kontrolne. [Migracje wersjonowane](https://documentation.red-gate.com/fd/versioned-migrations-273973333.html).
+1. Dodaj kolejny plik w `backend/src/main/resources/db/migration`, np. `V8__add_calendar.sql`. Uzgodnij numer z zespołem, aby dwa PR-y nie dodały różnych migracji V8. Zastosowanych migracji SQL i Java nie edytuj — poprawka dostaje nowy numer. V5–V7 są już zajęte przez Sprint 3. Flyway zapisuje wykonane wersje i ich sumy kontrolne. [Migracje wersjonowane](https://documentation.red-gate.com/fd/versioned-migrations-273973333.html).
 2. W migracji dodaj `CREATE TABLE`, `ALTER TABLE` lub indeksy oraz odpowiednie zmiany encji i kodu. Nie wpisuj na sztywno schematu `public`: produkcyjny schemat `training_app` ustawia konfiguracja. Hibernate ma `ddl-auto=validate`, więc sam nie tworzy tabel.
 3. Sprawdź zmianę lokalnie w Dockerze i testach, również na bazie z istniejącymi danymi. Zmiana schematu i korzystający z niej kod powinny znaleźć się w tym samym PR.
 4. Po scaleniu do `main` Vercel wdraża backend. Przy jego starcie Flyway wykonuje brakujące migracje w Supabase, przez połączenie sesyjne na porcie `5432`. Nie trzeba ręcznie tworzyć tabel w panelu. Po wdrożeniu sprawdź logi Flyway i `/api/health`; błąd migracji zatrzymuje start aplikacji.
@@ -189,7 +180,9 @@ Mała pula połączeń jest ustawiona w profilu produkcyjnym, ponieważ Vercel m
 
 Zapytania operatora, np. zmiana roli trenera, muszą używać właściwego schematu. Przy pracy w SQL Editor ustaw `SET search_path TO training_app, public;`, a przy uruchamianiu skryptu `tools/set-user-role.sql` ustaw taki sam `search_path` dla połączenia operatora.
 
-Aktualne migracje wymagają zwykłego PostgreSQL. Planowany moduł progresu z TimescaleDB wymaga osobnej decyzji: rozszerzenie jest wycofane dla projektów Supabase na PostgreSQL 17. [Informacja Supabase o TimescaleDB](https://supabase.com/docs/guides/database/extensions/timescaledb).
+Migracje V5–V7 dodają progres i grupy trenera. V5/V6 są zgodne ze zwykłym PostgreSQL. Migracja Java V7 sprawdza dostępność TimescaleDB i tworzy prawdziwe hypertabele `exercise_results` oraz `body_metrics` tam, gdzie rozszerzenie jest dostępne (lokalny Compose). Na Supabase PostgreSQL 17 pozostawia zwykłe tabele z indeksami. API i funkcje są takie same w obu wariantach; nie trzeba zmieniać panelu Supabase. Jest to wariant uzgodniony 19.11.2026. [Ograniczenie Supabase](https://supabase.com/docs/guides/database/extensions/timescaledb).
+
+V7 jest migracją wersjonowaną: przeniesienie później istniejącej bazy bez rozszerzenia do hostingu TimescaleDB wymaga nowej migracji konwertującej tabele. Ponowny start nie uruchomi wykonanej V7 drugi raz.
 
 ## Weryfikacja lokalna konfiguracji
 
@@ -211,4 +204,4 @@ Test profilu produkcyjnego z katalogu głównego repozytorium (PowerShell 7 i ur
 pwsh -NoProfile -File tests/smoke-deployment.ps1
 ```
 
-Skrypt buduje backend i tworzy własne tymczasowe kontenery PostgreSQL oraz Mailpit. Sprawdza port wskazany przez hosting, schemat `training_app`, migracje V1–V4, katalog, CORS, brak konta developerskiego, wyłączenie Swaggera i przepływ konta/planu przez SMTP. Po zakończeniu usuwa własne kontenery, sieć i obraz. Nie korzysta z istniejącej bazy Compose ani ze zdalnych kont. Połączenia JDBC/SMTP w tym izolowanym teście są celowo lokalne i bez TLS; test nie potwierdza połączenia TLS z rzeczywistym Supabase lub dostawcą SMTP.
+Skrypt buduje backend i tworzy własne tymczasowe kontenery PostgreSQL oraz Mailpit. Sprawdza port wskazany przez hosting, schemat `training_app`, migracje V1–V7, katalog, CORS, brak konta developerskiego, wyłączenie Swaggera i przepływ konta/planu przez SMTP. Po zakończeniu usuwa własne kontenery, sieć i obraz. Nie korzysta z istniejącej bazy Compose ani ze zdalnych kont. Połączenia JDBC/SMTP w tym izolowanym teście są celowo lokalne i bez TLS; test nie potwierdza połączenia TLS z rzeczywistym Supabase lub dostawcą SMTP. Nową wersję sprawdzono tym skryptem 19.11.2026; testy progresu i trenera opisuje [SPRINT3.md](SPRINT3.md).

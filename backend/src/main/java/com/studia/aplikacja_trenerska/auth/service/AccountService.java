@@ -89,8 +89,8 @@ public class AccountService {
     public void confirmDeletion(String rawToken) {
         User user = consume(rawToken, VerificationTokenType.ACCOUNT_DELETION);
         tokens.deleteByUserId(user.getId());
-        // V3 foreign keys cascade through owned plans, days and plan exercises;
-        // catalog exercises remain, with created_by cleared by the database.
+        // Foreign keys remove owned plans, results, metrics and coaching relationships.
+        // Other users' independent plan copies and the exercise catalog remain.
         users.delete(user);
     }
 

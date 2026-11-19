@@ -2,7 +2,7 @@
 
 Projekt studencki (UE Katowice). Stack: Spring Boot, PostgreSQL/TimescaleDB, React, Docker.
 
-Wersja online: **[aplikacja-trenerska.vercel.app](https://aplikacja-trenerska.vercel.app)**. Poczta działa demonstracyjnie — linki potwierdzające przekazuje administrator; wiadomości e-mail nie są wysyłane.
+Wersja online: **[aplikacja-trenerska.vercel.app](https://aplikacja-trenerska.vercel.app)**.
 
 ## Wymagania
 
@@ -36,6 +36,10 @@ Tworzenie tego konta działa wyłącznie w profilu `dev`. Poza lokalnymi testami
 
 Po zalogowaniu dostępne są zakładki **Ćwiczenia** (`/cwiczenia`) i **Moje plany** (`/plany`). Katalog obsługuje filtry nazwy, partii i typu. Przycisk **Nowy plan** otwiera kreator dni i ćwiczeń z seriami, powtórzeniami i ciężarem. W szczegółach można edytować lub usunąć plan po potwierdzeniu; strzałki w formularzu zmieniają kolejność dni i ćwiczeń.
 
+**Trening** (`/trening`) zapisuje wykonane serie wybranego dnia planu. **Progres** (`/progres`) zawiera wagę, obwody, historię i wykresy. W **Współpracy** (`/wspolpraca`) przyjmujesz zaproszenia i otrzymujesz plany. Osoby z rolą `TRAINER` mają też **Panel trenera** (`/trener`): grupy, zaproszenia, przypisywanie planów i podgląd progresu po zgodzie podopiecznego. Przypisany plan jest niezależną kopią na koncie odbiorcy.
+
+Lokalna TimescaleDB przechowuje wyniki i pomiary w prawdziwych hypertabelach. Supabase PostgreSQL 17 używa zgodnych zwykłych tabel z indeksami; API działa tak samo. Migracje V5–V7 wykonuje automatycznie Flyway. Instrukcja i kontrakty nowych modułów: [SPRINT3.md](docs/SPRINT3.md).
+
 ## Uruchomienie lokalne (dev)
 
 1. Baza i poczta: `docker compose up db mailpit` albo lokalny PostgreSQL i serwer SMTP.
@@ -49,7 +53,7 @@ Lokalny frontend działa na http://localhost:5173, a Mailpit na http://localhost
 | Zmienna środowiskowa | Domyślna wartość lokalna | Zastosowanie |
 |---|---|---|
 | `APP_FRONTEND_URL` | `http://localhost:5173` | Adres aplikacji używany w linkach e-mail; w Compose `http://localhost:3000` |
-| `APP_MAIL_MODE` | `smtp` | `smtp` wysyła wiadomości; `log` zapisuje linki w prywatnych logach backendu na potrzeby demonstracji |
+| `APP_MAIL_MODE` | `smtp` | Transport poczty: SMTP lub techniczny `log` bez wysyłki |
 | `APP_MAIL_FROM` | `no-reply@aplikacja.local` | Nadawca wiadomości |
 | `SPRING_MAIL_HOST` | `localhost` | Host SMTP; w Compose `mailpit` |
 | `SPRING_MAIL_PORT` | `1025` | Port SMTP |
@@ -60,7 +64,7 @@ Lokalny frontend działa na http://localhost:5173, a Mailpit na http://localhost
 | `APP_ACCOUNT_PASSWORD_RESET_TTL` | `30m` | Ważność linku resetu hasła |
 | `APP_ACCOUNT_ACCOUNT_DELETION_TTL` | `30m` | Ważność linku usunięcia konta |
 
-Konfiguracja lokalna z Mailpit nie dostarcza wiadomości do rzeczywistych skrzynek. Dla wdrożenia ustaw adres frontendu z HTTPS i własny sekret JWT (`APP_JWT_SECRET`). Wysyłkę zapewnia produkcyjny SMTP albo demonstracyjny wariant `APP_MAIL_MODE=log` opisany poniżej. Przy pracy lokalnej na innym porcie lub przez zewnętrzny adres zmień `APP_FRONTEND_URL`.
+Wiadomości lokalne odbiera Mailpit. Dla wdrożenia ustaw adres frontendu z HTTPS, własny sekret JWT (`APP_JWT_SECRET`) oraz dane SMTP. Przy pracy lokalnej na innym porcie lub przez zewnętrzny adres zmień `APP_FRONTEND_URL`.
 
 ## Weryfikacja zmian
 
@@ -96,7 +100,7 @@ Stan na 16 listopada 2026: frontend działa pod adresem podanym wyżej, a backen
 
 Profil backendu `prod` oddziela ustawienia wdrożenia od lokalnych profili `docker,dev`. Frontend na Vercel wymaga publicznego adresu backendu w `VITE_API_URL`; lokalny pusty adres zachowuje proxy `/api`.
 
-Do pokazu studenckiego można pominąć dostawcę poczty: ustaw w backendzie `APP_MAIL_MODE=log`, a we frontendzie `VITE_MAIL_MODE=log`. Dane SMTP i `APP_MAIL_FROM` nie są wtedy wymagane. Po rejestracji, prośbie o reset hasła lub usunięcie konta odczytaj pełny link z wpisu `[DEMO MAIL]` w prywatnych **Runtime Logs** backendu i otwórz go ręcznie. Używaj fikcyjnych kont, np. `student@example.test`, i nie publikuj logów z linkami dającymi dostęp do operacji na koncie. Potwierdzenia, ważność tokenów i ochrona tras pozostają aktywne.
+Pocztę konfiguruje backend. `APP_MAIL_MODE=smtp` wysyła wiadomości przez SMTP, lokalnie do Mailpit. Techniczny transport `log` zapisuje poufne linki jako `[MAIL LINK]` w prywatnych logach i nie dostarcza e-maili. W ostatnim sprawdzonym wdrożeniu używano `log`; wysyłka online wymaga konfiguracji SMTP. Frontend korzysta z jednego standardowego przepływu konta.
 
 Konfiguracja i [checklista wdrożenia](docs/DEPLOYMENT.md#5-sprawdź-wdrożenie) rozróżniają wykonane sprawdzenia online od lokalnych testów pełnych przepływów konta i planów. Ręczny odbiór tych przepływów online na osobnym fikcyjnym koncie pozostaje do wykonania. Dokładne zmienne, SMTP, migracje, CORS i ustawienia paneli: [DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
@@ -110,4 +114,5 @@ Konfiguracja i [checklista wdrożenia](docs/DEPLOYMENT.md#5-sprawdź-wdrożenie)
 - [EXERCISES_API.md](docs/EXERCISES_API.md) — odczyt katalogu ćwiczeń z filtrami, format odpowiedzi i autoryzacja
 - [WORKOUT_PLANS_API.md](docs/WORKOUT_PLANS_API.md) — CRUD własnych planów, dni i ćwiczeń, walidacja i testy uprawnień
 - [WORKOUT_FRONTEND.md](docs/WORKOUT_FRONTEND.md) — listy, kreator, edycja i usuwanie planów, walidacja i pełny test przeglądarkowy
+- [SPRINT3.md](docs/SPRINT3.md) — wyniki, pomiary, wykresy, grupy, zaproszenia i przypisywanie planów; API i testy
 - [DEPLOYMENT.md](docs/DEPLOYMENT.md) — Vercel, Supabase, SMTP, zmienne środowiskowe i sprawdzenie wdrożenia

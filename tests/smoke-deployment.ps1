@@ -137,11 +137,11 @@ try {
     Write-Output 'PASS: prod profile starts on custom PORT 8097.'
 
     $stage = 'private schema and migrations'
-    Assert-That ((Invoke-Sql 'SELECT count(*) FROM training_app.flyway_schema_history WHERE success AND version IS NOT NULL;') -eq '4') 'Expected all four migrations.'
+    Assert-That ((Invoke-Sql 'SELECT count(*) FROM training_app.flyway_schema_history WHERE success AND version IS NOT NULL;') -eq '7') 'Expected all seven migrations.'
     Assert-That ((Invoke-Sql 'SELECT count(*) FROM training_app.exercises;') -eq '48') 'Expected 48 catalog exercises.'
     Assert-That ((Invoke-Sql "SELECT count(*) FROM training_app.users WHERE email = 'dev@example.test';") -eq '0') 'Production created a development account.'
     Assert-That ((Invoke-Sql "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('users','verification_tokens','exercises','workout_plans','plan_days','plan_exercises');") -eq '0') 'Application tables leaked into public.'
-    Write-Output 'PASS: Flyway V1-V4 and 48 exercises in training_app; no development account or public application tables.'
+    Write-Output 'PASS: Flyway V1-V7 and 48 exercises in training_app; no development account or public application tables.'
 
     $stage = 'exact production CORS'
     foreach ($origin in @($frontend, $preview)) {
