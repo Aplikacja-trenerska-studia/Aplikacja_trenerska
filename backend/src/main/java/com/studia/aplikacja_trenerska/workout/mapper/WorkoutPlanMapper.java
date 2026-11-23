@@ -1,6 +1,7 @@
 package com.studia.aplikacja_trenerska.workout.mapper;
 
 import java.util.Comparator;
+import java.util.List;
 
 import org.springframework.stereotype.Component;
 
@@ -19,17 +20,22 @@ public class WorkoutPlanMapper {
     }
 
     public WorkoutPlanSummaryResponse toSummary(WorkoutPlan plan) {
-        return new WorkoutPlanSummaryResponse(plan.getId(), plan.getName(), plan.getDescription(), plan.getCreatedAt());
+        return new WorkoutPlanSummaryResponse(plan.getId(), plan.getName(), plan.getDescription(), plan.getCreatedAt(),
+                plan.isShared());
     }
 
     public WorkoutPlanResponse toResponse(WorkoutPlan plan) {
-        var days = plan.getDays().stream().sorted(Comparator.comparingInt(PlanDay::getDayIndex))
+        return new WorkoutPlanResponse(plan.getId(), plan.getName(), plan.getDescription(), plan.getCreatedAt(),
+                plan.isShared(), plan.isShared() ? plan.getShareToken() : null, toDays(plan));
+    }
+
+    public List<WorkoutPlanResponse.Day> toDays(WorkoutPlan plan) {
+        return plan.getDays().stream().sorted(Comparator.comparingInt(PlanDay::getDayIndex))
                 .map(day -> new WorkoutPlanResponse.Day(day.getId(), day.getName(), day.getDayIndex(),
                         day.getExercises().stream().sorted(Comparator.comparingInt(PlanExercise::getOrderIndex))
                                 .map(entry -> new WorkoutPlanResponse.Entry(entry.getId(), entry.getOrderIndex(),
                                         exercises.toResponse(entry.getExercise()), entry.getSets(), entry.getReps(), entry.getWeight()))
                                 .toList()))
                 .toList();
-        return new WorkoutPlanResponse(plan.getId(), plan.getName(), plan.getDescription(), plan.getCreatedAt(), days);
     }
 }

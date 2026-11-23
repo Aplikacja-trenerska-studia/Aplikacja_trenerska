@@ -12,6 +12,7 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
@@ -30,6 +31,13 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.badRequest().body(Map.of(
 				"message", "Nieprawidłowa wartość parametru: " + ex.getName(),
 				"errors", Map.of(ex.getName(), "Nieprawidłowa wartość")));
+	}
+
+	@ExceptionHandler(MissingServletRequestParameterException.class)
+	public ResponseEntity<Map<String, Object>> handleMissingParameter(MissingServletRequestParameterException ex) {
+		return ResponseEntity.badRequest().body(Map.of(
+				"message", "Brak wymaganego parametru: " + ex.getParameterName(),
+				"errors", Map.of(ex.getParameterName(), "Pole jest wymagane")));
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)

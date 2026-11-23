@@ -3,13 +3,13 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { Button } from '@/components/ui/button'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { clearSession } from '@/lib/auth-storage'
-import { ChartNoAxesCombined, ClipboardList, Dumbbell, Play, ShieldCheck, UserRound, UsersRound } from 'lucide-react'
+import { Calculator, CalendarDays, ChartColumn, ChartNoAxesCombined, ClipboardList, Dumbbell, Play, ShieldCheck, UserRound, UsersRound } from 'lucide-react'
 
 export function AppLayout() {
   const navigate = useNavigate()
   const { loggedIn, user } = useAuthSession()
   const { pathname } = useLocation()
-  const trainingPage = ['/cwiczenia', '/plany', '/trening', '/progres', '/wspolpraca', '/trener', '/admin'].some((path) => pathname === path || pathname.startsWith(`${path}/`))
+  const trainingPage = (loggedIn && pathname === '/') || ['/cwiczenia', '/plany', '/trening', '/progres', '/kalendarz', '/statystyki', '/kalkulatory', '/udostepnione', '/wspolpraca', '/trener', '/admin'].some((path) => pathname === path || pathname.startsWith(`${path}/`))
 
   return (
     <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-col px-4 pb-6 pt-5 sm:px-6 sm:pt-8">
@@ -44,11 +44,14 @@ export function AppLayout() {
           </div>
         )}
       </header>
-      {loggedIn && <nav aria-label="Trening" className="mb-7 grid grid-cols-2 gap-2 sm:grid-cols-3">{[
+      {loggedIn && <nav aria-label="Trening" className="mb-7 grid grid-cols-2 gap-2 sm:grid-cols-4">{[
         { to: '/cwiczenia', label: 'Ćwiczenia', Icon: Dumbbell },
         { to: '/plany', label: 'Moje plany', Icon: ClipboardList },
         { to: '/trening', label: 'Trening', Icon: Play },
+        { to: '/kalendarz', label: 'Kalendarz', Icon: CalendarDays },
         { to: '/progres', label: 'Progres', Icon: ChartNoAxesCombined },
+        { to: '/statystyki', label: 'Statystyki', Icon: ChartColumn },
+        { to: '/kalkulatory', label: 'Kalkulatory', Icon: Calculator },
         { to: '/wspolpraca', label: 'Współpraca', Icon: UsersRound },
         ...(user?.role === 'TRAINER' ? [{ to: '/trener', label: 'Panel trenera', Icon: UsersRound }] : []),
         ...(user?.role === 'ADMIN' ? [{ to: '/admin', label: 'Administracja', Icon: ShieldCheck }] : []),

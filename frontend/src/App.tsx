@@ -22,6 +22,10 @@ import { TrainerPage } from '@/pages/TrainerPage'
 import { TrainerRoute } from '@/components/routing/TrainerRoute'
 import { AdminRoute } from '@/components/routing/AdminRoute'
 import { AdminPage } from '@/pages/AdminPage'
+import { CalendarPage } from '@/pages/CalendarPage'
+import { StatsPage } from '@/pages/StatsPage'
+import { CalculatorsPage } from '@/pages/CalculatorsPage'
+import { SharedPlanPage } from '@/pages/SharedPlanPage'
 
 export default function App() {
   return (
@@ -38,6 +42,10 @@ export default function App() {
             <Route path="/plany/:id" element={<PlanDetailsPage />} />
             <Route path="/trening" element={<WorkoutSessionPage />} />
             <Route path="/progres" element={<ProgressPage />} />
+            <Route path="/kalendarz" element={<CalendarPage />} />
+            <Route path="/statystyki" element={<StatsPage />} />
+            <Route path="/kalkulatory" element={<CalculatorsPage />} />
+            <Route path="/udostepnione/:token" element={<SharedPlanPage />} />
             <Route path="/wspolpraca" element={<CollaborationPage />} />
             <Route element={<TrainerRoute />}>
               <Route path="/trener" element={<TrainerPage />} />

@@ -14,6 +14,7 @@ export type PlanSummary = {
   name: string
   description: string | null
   createdAt: string
+  shared: boolean
 }
 
 export type WorkoutPlanRequest = {
@@ -23,6 +24,7 @@ export type WorkoutPlanRequest = {
 }
 
 export type WorkoutPlan = PlanSummary & {
+  shareToken: string | null
   days: {
     id: number
     name: string
@@ -36,6 +38,17 @@ export type WorkoutPlan = PlanSummary & {
       weight: number
     }[]
   }[]
+}
+
+export type PlanShare = { shared: boolean; shareToken: string | null }
+
+export type SharedPlan = {
+  name: string
+  description: string | null
+  ownerName: string
+  createdAt: string
+  own: boolean
+  days: WorkoutPlan['days']
 }
 
 export const muscleGroupLabels: Record<MuscleGroup, string> = {

@@ -23,16 +23,16 @@ export function WorkoutSessionPage() {
     <div><p className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">Dziennik treningowy</p><h1 className="text-3xl font-semibold tracking-tight">Wykonaj trening</h1><p className="mt-2 text-sm text-muted-foreground">Wybierz dzień planu i zapisz rzeczywiście wykonane serie. Odznacz serie, które pomijasz.</p></div>
     <ResourceStatus loading={plans.loading} error={plans.error} onRetry={plans.reload} label="Wczytywanie planów…" />
     {!plans.loading && !plans.error && plans.data && (plans.data.length ? <div className="space-y-2"><Label htmlFor="session-plan">Plan treningowy</Label><select id="session-plan" className={selectClass} value={planId} onChange={(event) => setParams(event.target.value ? { planId: event.target.value } : {})}><option value="">Wybierz plan</option>{plans.data.map((plan) => <option key={plan.id} value={plan.id}>{plan.name}</option>)}</select></div> : <Card><CardContent className="space-y-4 py-8 text-center"><Dumbbell className="mx-auto text-primary" aria-hidden="true" /><p>Najpierw utwórz plan lub przyjmij plan od trenera.</p><Button asChild><Link to="/plany/nowy">Utwórz plan</Link></Button></CardContent></Card>)}
-    {planId && <SelectedPlan key={planId} planId={planId} initialDay={params.get('dayId')} />}
+    {planId && <SelectedPlan key={planId} planId={planId} initialDay={params.get('dayId')} scheduleId={Number(params.get('scheduleId')) || null} />}
   </div>
 }
 
-function SelectedPlan({ planId, initialDay }: { planId: string; initialDay: string | null }) {
+function SelectedPlan({ planId, initialDay, scheduleId }: { planId: string; initialDay: string | null; scheduleId: number | null }) {
   const plan = useApiResource<WorkoutPlan>(`/api/plans/${encodeURIComponent(planId)}`)
-  return <><ResourceStatus loading={plan.loading} error={plan.error} onRetry={plan.reload} label="Wczytywanie dni planu…" />{!plan.loading && !plan.error && plan.data && <SessionForm plan={plan.data} initialDay={initialDay} />}</>
+  return <><ResourceStatus loading={plan.loading} error={plan.error} onRetry={plan.reload} label="Wczytywanie dni planu…" />{!plan.loading && !plan.error && plan.data && <SessionForm plan={plan.data} initialDay={initialDay} scheduleId={scheduleId} />}</>
 }
 
-function SessionForm({ plan, initialDay }: { plan: WorkoutPlan; initialDay: string | null }) {
+function SessionForm({ plan, initialDay, scheduleId }: { plan: WorkoutPlan; initialDay: string | null; scheduleId: number | null }) {
   const [dayId, setDayId] = useState<number | undefined>(plan.days.find((day) => String(day.id) === initialDay)?.id || plan.days[0]?.id)
   const day = plan.days.find((item) => item.id === dayId)
   const [rows, setRows] = useState<SetDraft[]>(day ? sessionDraft(day) : [])
@@ -40,6 +40,7 @@ function SessionForm({ plan, initialDay }: { plan: WorkoutPlan; initialDay: stri
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [scheduleNote, setScheduleNote] = useState('')
   function update(index: number, change: Partial<SetDraft>) { setRows((current) => current.map((row, i) => i === index ? { ...row, ...change } : row)) }
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -56,11 +57,17 @@ function SessionForm({ plan, initialDay }: { plan: WorkoutPlan; initialDay: stri
     setSaving(true)
     try {
       await apiFetch('/api/results', { method: 'POST', body: JSON.stringify({ time: instant, planId: plan.id, planDayId: day.id, sets }) })
+      if (scheduleId) {
+        try {
+          await apiFetch(`/api/schedule/${scheduleId}/complete`, { method: 'POST' })
+          setScheduleNote('Trening w kalendarzu został oznaczony jako wykonany.')
+        } catch { setScheduleNote('Wyniki zapisano, ale nie udało się oznaczyć treningu w kalendarzu. Możesz zrobić to ręcznie w kalendarzu.') }
+      }
       setSaved(true)
     } catch (err) { setError((err as ApiError).message || 'Nie udało się zapisać treningu. Twoje wpisy pozostały w formularzu.') }
     finally { setSaving(false) }
   }
-  if (saved) return <Card><CardContent className="space-y-4 py-8 text-center"><Check className="mx-auto text-primary" aria-hidden="true" /><h2 className="text-xl font-semibold">Trening zapisany</h2><p className="text-sm text-muted-foreground">Wyniki są już w historii. Sprawdź wykres progresu lub wróć do swoich planów.</p><div className="flex flex-wrap justify-center gap-2"><Button asChild><Link to="/progres">Zobacz progres</Link></Button><Button asChild variant="outline"><Link to="/plany">Moje plany</Link></Button></div><Button variant="ghost" onClick={() => { setSaved(false); setTime(localDateTime()); setRows(day ? sessionDraft(day) : []) }}>Zapisz kolejny trening</Button></CardContent></Card>
+  if (saved) return <Card><CardContent className="space-y-4 py-8 text-center"><Check className="mx-auto text-primary" aria-hidden="true" /><h2 className="text-xl font-semibold">Trening zapisany</h2><p className="text-sm text-muted-foreground">Wyniki są już w historii. Sprawdź wykres progresu lub wróć do swoich planów.</p>{scheduleNote && <p className="text-sm text-muted-foreground">{scheduleNote}</p>}<div className="flex flex-wrap justify-center gap-2"><Button asChild><Link to="/progres">Zobacz progres</Link></Button><Button asChild variant="outline"><Link to="/plany">Moje plany</Link></Button></div><Button variant="ghost" onClick={() => { setSaved(false); setScheduleNote(''); setTime(localDateTime()); setRows(day ? sessionDraft(day) : []) }}>Zapisz kolejny trening</Button></CardContent></Card>
   return <form onSubmit={submit} className="space-y-5">
     <fieldset disabled={saving} className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><Label htmlFor="session-day">Dzień planu</Label><select id="session-day" className={selectClass} value={dayId} onChange={(event) => { const next = plan.days.find((item) => item.id === Number(event.target.value)); setDayId(next?.id); setRows(next ? sessionDraft(next) : []); setError('') }}>{plan.days.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></div><div className="space-y-2"><Label htmlFor="session-time">Data i godzina treningu</Label><Input id="session-time" type="datetime-local" value={time} onChange={(event) => setTime(event.target.value)} required /></div></div>

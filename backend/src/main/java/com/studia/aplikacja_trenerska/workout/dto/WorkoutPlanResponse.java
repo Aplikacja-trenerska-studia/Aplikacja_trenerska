@@ -4,7 +4,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-public record WorkoutPlanResponse(Long id, String name, String description, Instant createdAt, List<Day> days) {
+public record WorkoutPlanResponse(Long id, String name, String description, Instant createdAt, boolean shared,
+        String shareToken, List<Day> days) {
     public record Day(Long id, String name, int dayIndex, List<Entry> exercises) {
     }
 

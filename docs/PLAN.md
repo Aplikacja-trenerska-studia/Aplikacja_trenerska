@@ -168,19 +168,21 @@ Nowe funkcje M4 zaimplementowano i sprawdzono na `feat/sprint-3` 19.11.2026. Prz
 
 ### M5. Udostępnianie i ocena planów (P2)
 
-- [ ] Udostępnianie planów (link / inni użytkownicy)
+- [x] Udostępnianie planów linkiem: włączanie i wyłączanie przez właściciela, podgląd dla zalogowanych, niezależna kopia na własnym koncie (S4-06, V9)
 - [ ] **Algorytm oceny planów** — *do zdefiniowania w zespole* (np. pokrycie grup mięśniowych, objętość tygodniowa, balans push/pull)
 
 ### M6. Moduły dodatkowe (P2/P3)
 
 | Moduł | Opis | Priorytet |
 |---|---|---|
-| **Kalkulator kalorii/makro** | Mini-moduł w stylu Fitatu: średnie zapotrzebowanie kaloryczne (np. Mifflin-St Jeor), podział makroskładników | P2 |
-| **Kalkulator 1RM** | Maksymalny ciężar dla ćwiczeń (np. wzór Epleya) | P2 |
-| **Kalendarz i przypomnienia** | Planowanie treningów w kalendarzu, powiadomienia | P2 |
-| **Statystyki** | Podsumowania treningów, objętość, rekordy | P2 |
+| **Kalkulator kalorii/makro** | Mini-moduł w stylu Fitatu: średnie zapotrzebowanie kaloryczne (np. Mifflin-St Jeor), podział makroskładników | P2 — 🟡 zaimplementowany (S4-02) |
+| **Kalkulator 1RM** | Maksymalny ciężar dla ćwiczeń (np. wzór Epleya) | P2 — 🟡 zaimplementowany (S4-01) |
+| **Kalendarz i przypomnienia** | Planowanie treningów w kalendarzu, powiadomienia | P2 — 🟡 kalendarz i lista „dziś do zrobienia” (S4-03, S4-04); bez e-maili |
+| **Statystyki** | Podsumowania treningów, objętość, rekordy | P2 — 🟡 zaimplementowane (S4-05) |
 | **Social media** | Tablica, wiadomości, DM | P3 |
 | **Wydarzenia sportowe** | Lista wydarzeń, np. Silesia Maraton | P3 |
+
+Moduły S4 przygotowano 23.11.2026 wraz z testami i dashboardem po zalogowaniu (S4-07). Testy backendu, build frontendu, review i test na telefonie pozostają do wykonania. Kontrakt API i zasady obliczeń: [SPRINT4.md](SPRINT4.md).
 
 ---
 
@@ -197,7 +199,7 @@ group_members    (group_id → training_groups, user_id → users, status, invit
 
 -- Ćwiczenia i plany
 exercises        (id, name, muscle_group, type, description, created_by)
-workout_plans    (id, owner_id → users, name, description, is_shared, created_at)
+workout_plans    (id, owner_id → users, name, description, is_shared, share_token UNIQUE, created_at)
 plan_days        (id, plan_id → workout_plans, day_index, name)
 plan_exercises   (id, plan_day_id → plan_days, exercise_id, sets, reps, weight, order_index)
 plan_assignments (id, group_id, user_id, source_plan_id NULL, copied_plan_id NULL,
@@ -206,6 +208,10 @@ plan_assignments (id, group_id, user_id, source_plan_id NULL, copied_plan_id NUL
 -- Szeregi czasowe; klucz główny obu tabel: (id UUID, time TIMESTAMPTZ)
 exercise_results (id, time, user_id, exercise_id, exercise_name, plan_name, day_name, set_no, reps, weight)
 body_metrics     (id, time, user_id, weight_kg, chest_cm, waist_cm, hips_cm, arm_cm, thigh_cm)
+
+-- Kalendarz (V9)
+scheduled_workouts (id, user_id → users, plan_id → workout_plans NULL, day_index, plan_name, day_name,
+                    scheduled_date, note, completed_at, created_at)
 
 -- V7 wywołuje create_hypertable tylko, gdy serwer udostępnia TimescaleDB.
 -- Supabase PostgreSQL 17 zachowuje zwykłe tabele z indeksami użytkownika i czasu.
@@ -229,7 +235,9 @@ body_metrics     (id, time, user_id, weight_kg, chest_cm, waist_cm, hips_cm, arm
 | GET | `/api/exercises?muscleGroup=&type=&q=` | Katalog z filtrami grupy, typu i nazwy — wdrożony | USER / TRAINER / ADMIN |
 | GET/POST | `/api/plans` | Lista / tworzenie własnych planów — wdrożone | USER / TRAINER / ADMIN |
 | GET/PUT/DELETE | `/api/plans/{id}` | Szczegóły / edycja / usunięcie własnego planu — wdrożone | USER / TRAINER / ADMIN |
-| POST | `/api/plans/{id}/share` | Udostępnienie planu | USER |
+| POST/DELETE | `/api/plans/{id}/share` | Włączenie / wyłączenie udostępniania własnego planu — S4 | USER / TRAINER / ADMIN |
+| GET | `/api/shared-plans/{token}` | Podgląd udostępnionego planu — S4 | USER / TRAINER / ADMIN |
+| POST | `/api/shared-plans/{token}/copy` | Kopia udostępnionego planu na własnym koncie — S4 | USER / TRAINER / ADMIN |
 | POST | `/api/results` | Atomowy zapis serii wybranego dnia własnego planu — S3 | USER / TRAINER / ADMIN |
 | GET | `/api/results?exerciseId=&from=&to=` | Własna historia wyników, najnowsze maks. 2000 wpisów — S3 | USER / TRAINER / ADMIN |
 | DELETE | `/api/results/{id}?time=` | Usunięcie własnego wyniku — S3 | USER / TRAINER / ADMIN |
@@ -246,8 +254,14 @@ body_metrics     (id, time, user_id, weight_kg, chest_cm, waist_cm, hips_cm, arm
 | POST | `/api/my-invitations/{groupId}/accept` | Akceptacja zaproszenia — S3 | USER / TRAINER / ADMIN |
 | DELETE | `/api/my-invitations/{groupId}` | Odrzucenie zaproszenia / opuszczenie grupy — S3 | USER / TRAINER / ADMIN |
 | GET | `/api/my-assignments` | Własne przypisania planów — S3 | USER / TRAINER / ADMIN |
-| GET | `/api/calc/1rm?weight=&reps=` | Kalkulator 1RM | USER |
-| GET | `/api/calc/calories` | Zapotrzebowanie kaloryczne | USER |
+| GET | `/api/calc/1rm?weight=&reps=` | Kalkulator 1RM — S4 | USER / TRAINER / ADMIN |
+| GET | `/api/calc/calories?sex=&age=&heightCm=&weightKg=&activity=&goal=` | Zapotrzebowanie kaloryczne i makro — S4 | USER / TRAINER / ADMIN |
+| GET/POST | `/api/schedule` | Kalendarz w zakresie dat / zaplanowanie treningu — S4 | USER / TRAINER / ADMIN |
+| PUT/DELETE | `/api/schedule/{id}` | Edycja / usunięcie wpisu — S4 | USER / TRAINER / ADMIN |
+| POST/DELETE | `/api/schedule/{id}/complete` | Oznaczenie / cofnięcie wykonania — S4 | USER / TRAINER / ADMIN |
+| GET | `/api/schedule/agenda?date=` | Dziś, zaległe i najbliższe treningi — S4 | USER / TRAINER / ADMIN |
+| GET | `/api/stats/summary?weeks=&zone=` | Objętość tygodniowa, podsumowanie i rekordy — S4 | USER / TRAINER / ADMIN |
+| GET | `/api/stats/sessions?limit=` | Ostatnie treningi — S4 | USER / TRAINER / ADMIN |
 
 ---
 
@@ -383,8 +397,8 @@ Zadanie uznajemy za skończone, gdy:
 | M2 Plany treningowe | | ✅ model, katalog, API, listy, kreator, edycja i usuwanie gotowe; pełny przepływ UI sprawdzony w Dockerze |
 | M3 Progres | | ✅ technicznie gotowe i sprawdzone lokalnie 19.11; publikacja i odbiór w osobnej checkliście S3 |
 | M4 Moduł trenera | | ✅ technicznie gotowe i sprawdzone lokalnie: zaproszenia z akceptacją i niezależne kopie planów; publikacja i odbiór w osobnej checkliście S3 |
-| M5 Udostępnianie i ocena planów | | ☐ do wykonania |
-| M6 Moduły dodatkowe | | ☐ do wykonania |
+| M5 Udostępnianie i ocena planów | | 🟡 udostępnianie i kopiowanie zaimplementowane (S4-06); algorytm oceny w S5 |
+| M6 Moduły dodatkowe | | 🟡 kalkulatory, kalendarz z przypomnieniami i statystyki zaimplementowane (S4); testy do uruchomienia, review i telefon |
 | Frontend (UI/UX, mobile) | | 🟡 konta, plany oraz nowe ekrany treningu, progresu i trenera sprawdzone na desktopie i w mobilnym widoku przeglądarki; rzeczywisty telefon pozostaje do sprawdzenia |
 
 ---

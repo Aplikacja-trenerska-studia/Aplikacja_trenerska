@@ -42,6 +42,9 @@ public class WorkoutPlan {
     @Column(name = "is_shared", nullable = false)
     private boolean shared;
 
+    @Column(name = "share_token", length = 43, unique = true)
+    private String shareToken;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -59,6 +62,8 @@ public class WorkoutPlan {
     public void setDescription(String description) { this.description = description; }
     public boolean isShared() { return shared; }
     public void setShared(boolean shared) { this.shared = shared; }
+    public String getShareToken() { return shareToken; }
+    public void setShareToken(String shareToken) { this.shareToken = shareToken; }
     public Instant getCreatedAt() { return createdAt; }
     public List<PlanDay> getDays() { return java.util.Collections.unmodifiableList(days); }
 
