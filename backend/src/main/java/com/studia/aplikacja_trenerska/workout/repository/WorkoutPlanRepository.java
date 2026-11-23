@@ -11,4 +11,8 @@ public interface WorkoutPlanRepository extends JpaRepository<WorkoutPlan, Long> 
     List<WorkoutPlan> findAllByOwnerIdOrderByCreatedAtDescIdDesc(Long ownerId);
 
     Optional<WorkoutPlan> findByIdAndOwnerId(Long id, Long ownerId);
+
+    Optional<WorkoutPlan> findByShareTokenAndSharedTrue(String shareToken);
+
+    boolean existsByShareToken(String shareToken);
 }

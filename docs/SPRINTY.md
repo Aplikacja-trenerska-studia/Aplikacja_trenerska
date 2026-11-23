@@ -4,6 +4,8 @@
 
 > **Stan na 19.11.2026:** konta i plany ze Sprintu 2 oraz progres i trener (S3-01–S3-10) są technicznie gotowe i sprawdzone lokalnie. `feat/sprint-3` wypchnięto, scalono do `main` przez `f40d008` i wdrożono w obu projektach Vercela; wykonanie migracji Supabase do V7 potwierdzono 19.11. Publikację i pełny odbiór rozliczamy osobno w [checkliście poniżej](#publikacja-i-odbiór-s3). Terminu Sprintu 3 (**23–29.11**) nie zmieniamy. Pierwsze wdrożenie Vercel/Supabase (S3-11) wykonano wcześniej, 16.11. Szczegóły: [SPRINT3.md](SPRINT3.md), [DEPLOYMENT.md](DEPLOYMENT.md).
 
+> **Stan na 23.11.2026:** moduły Sprintu 4 (S4-01–S4-07) są zaimplementowane z wyprzedzeniem wraz z testami; testy backendu i build frontendu pozostają do uruchomienia w środowisku z zależnościami. Szczegóły: [postęp S4](#postęp-sprintu-4--implementacja-s4-01s4-07-23112026), [SPRINT4.md](SPRINT4.md).
+
 **Legenda:** ✅ / `[x]` — technicznie wykonane i sprawdzone w opisanym zakresie; 🟡 — częściowo; ☐ / `[ ]` — pozostaje do wykonania albo potwierdzenia. Status funkcji nie zastępuje zespołowego review ani całej Definition of Done; scalenie i wdrożenie są raportowane osobno.
 
 ## Założenia
@@ -320,30 +322,49 @@ Pierwsze wdrożenie wykonano przed planowanym terminem Sprintu 3. Opisany tu his
 **Cel:** komplet modułów P2. Po tym sprincie spełniamy kryterium **≥ 6 modułów**.
 
 
-| ID    | Zadanie                                                                                                         | Tor         | Kto |
-| ----- | --------------------------------------------------------------------------------------------------------------- | ----------- | --- |
-| S4-01 | **Kalkulator 1RM** (np. wzór Epleya): endpoint + widok                                                          | BE-2 / FE-1 |     |
-| S4-02 | **Kalkulator kalorii i makro** (np. Mifflin-St Jeor): endpoint + widok                                          | BE-2 / FE-1 |     |
-| S4-03 | **Kalendarz**: tabela `scheduled_workouts`, planowanie treningu na dany dzień, widok kalendarza                 | BE-1 / FE-2 |     |
-| S4-04 | **Przypomnienia** (wersja prosta: lista „dziś do zrobienia" na dashboardzie; opcjonalnie `@Scheduled` + e-mail) | BE-1        |     |
-| S4-05 | **Statystyki**: objętość tygodniowa, rekordy i widok; wspólne zapytania PostgreSQL (`date_trunc`, opcjonalnie `time_bucket` lokalnie) | BE-2 / FE-2 |     |
-| S4-06 | **Udostępnianie planów** (link / `is_shared`, kopiowanie planu do swojego konta)                                | BE-2 / FE-1 |     |
-| S4-07 | Dashboard (strona główna po zalogowaniu: najbliższy trening, ostatnie wyniki)                                   | FE-1        |     |
-| S4-08 | Przegląd UI na telefonie, lista błędów do S5                                                                    | wszyscy     |     |
+| ID | Zadanie | Tor | Kto | Status na 23.11 |
+|---|---|---|---|---|
+| S4-01 | **Kalkulator 1RM** (wzór Epleya): endpoint + widok | BE-2 / FE-1 | | 🟡 `GET /api/calc/1rm` (Epley + Brzycki/Lombardi, tabela %) i `/kalkulatory`; testy napisane, do uruchomienia |
+| S4-02 | **Kalkulator kalorii i makro** (Mifflin-St Jeor): endpoint + widok | BE-2 / FE-1 | | 🟡 `GET /api/calc/calories` (PPM, CPM, cel, makro) i widok; testy napisane, do uruchomienia |
+| S4-03 | **Kalendarz**: tabela `scheduled_workouts`, planowanie treningu na dany dzień, widok kalendarza | BE-1 / FE-2 | | 🟡 V9, CRUD `/api/schedule`, oznaczanie wykonania, `/kalendarz`; testy napisane, do uruchomienia |
+| S4-04 | **Przypomnienia** (wersja prosta: lista „dziś do zrobienia" na dashboardzie; opcjonalnie `@Scheduled` + e-mail) | BE-1 | | 🟡 `/api/schedule/agenda` i lista na dashboardzie; e-mail `@Scheduled` świadomie pominięty |
+| S4-05 | **Statystyki**: objętość tygodniowa, rekordy i widok; wspólne zapytania PostgreSQL | BE-2 / FE-2 | | 🟡 `/api/stats/summary`, `/api/stats/sessions`, `/statystyki`; agregaty JPQL wspólne dla H2/PG/Timescale |
+| S4-06 | **Udostępnianie planów** (link / `is_shared`, kopiowanie planu do swojego konta) | BE-2 / FE-1 | | 🟡 token linku (V9), podgląd, kopia, wyłączanie; `/udostepnione/:token`; testy napisane, do uruchomienia |
+| S4-07 | Dashboard (strona główna po zalogowaniu: najbliższy trening, ostatnie wyniki) | FE-1 | | 🟡 dashboard na `/`; sprawdzony wizualnie na makiecie API |
+| S4-08 | Przegląd UI na telefonie, lista błędów do S5 | wszyscy | | ☐ wstępnie: widok 375 × 812 bez przewijania poziomego na makiecie API; rzeczywisty telefon do wykonania |
 
 
 **Scenariusz:** wszystkie moduły widoczne w aplikacji.
+
+### Postęp Sprintu 4 — implementacja S4-01–S4-07 (23.11.2026)
+
+Kod modułów P2 przygotowano z wyprzedzeniem 23.11.2026. Termin Sprintu 4 (**30.11–6.12**) nie zmienia się. Kontrakt API, zasady obliczeń i opis widoków: [SPRINT4.md](SPRINT4.md).
+
+- [x] **Backend:** pakiety `calc`, `calendar`, `stats` oraz udostępnianie w `workout`; migracja **V9** (`share_token`, `scheduled_workouts`); obsługa brakujących parametrów zapytań (`400`).
+- [x] **Frontend:** `/kalkulatory`, `/kalendarz`, `/statystyki`, `/udostepnione/:token`, panel udostępniania w szczegółach planu, oznaczenie na liście planów, dashboard na `/`, nowe pozycje nawigacji i powrót po logowaniu do nowych tras. Formularz treningu uruchomiony z kalendarza oznacza wpis jako wykonany.
+- [x] **Testy napisane:** 4 klasy testów integracyjnych API (kalkulatory, kalendarz, statystyki, udostępnianie) i test aktualizacji V8 → V9 dla PostgreSQL; 9 testów frontendu w `frontend/tests/sprint4.test.mjs`.
+- [x] **Sprawdzone 23.11 w środowisku bez dostępu do Maven Central i npm:** 42 testy frontendu (33 dotychczasowe + 9 nowych) zaliczone; kontrola typów TypeScript całego `src` w trybie `strict` na deklaracjach zastępczych bibliotek; kompilacja nowego kodu Java i nowych testów względem zastępczych sygnatur Spring/JPA; widoki na makiecie API przy 375 × 812 i 1280 × 900 bez przewijania poziomego i błędów JavaScript.
+- [ ] **Do wykonania lokalnie:** `mvnw test` (H2) i `tests/test-sprint3-databases.ps1` (PostgreSQL 17 / TimescaleDB), `npm run lint`, `npm run build`, przepływ w Docker Compose z prawdziwym API.
+- [ ] Review zespołowe, test na rzeczywistym telefonie (S4-08), scalenie do `main` i wdrożenie (V9 w Supabase).
 
 ### Raport — Sprint 4
 
 ```markdown
 ## Raport: Sprint 4 (30.11–6.12)
 ### Zrobione
-- [ ] S4-01 ...
+- [x] S4-01 — kalkulator 1RM (Epley, porównanie Brzycki/Lombardi, tabela ciężarów %)
+- [x] S4-02 — kalkulator kalorii i makro (Mifflin-St Jeor, aktywność, cel)
+- [x] S4-03 — kalendarz treningów (V9 `scheduled_workouts`, widok miesiąca, wykonanie)
+- [x] S4-04 — przypomnienia w wersji prostej: dziś / zaległe / najbliższe na dashboardzie
+- [x] S4-05 — statystyki: objętość tygodniowa, rekordy, ostatnie treningi
+- [x] S4-06 — udostępnianie planów linkiem i kopiowanie do własnego konta
+- [x] S4-07 — dashboard po zalogowaniu
+- [ ] S4-08 — przegląd UI na telefonie
 ### Nie zrobione / przeniesione
--
+- Przypomnienia e-mail przez `@Scheduled` (opcjonalne; backend na Vercelu nie działa stale)
 ### Problemy i ryzyka
--
+- Testy backendu i build frontendu trzeba uruchomić w środowisku z zależnościami Maven/npm
+- V9 musi przejść w Supabase przy pierwszym starcie po wdrożeniu
 ### Plan na następny tydzień (Sprint 5)
 - Algorytm oceny planów treningowych
 - Poprawki UI na urządzeniach mobilnych

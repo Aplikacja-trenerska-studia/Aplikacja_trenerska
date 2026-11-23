@@ -40,6 +40,8 @@ Po zalogowaniu dostępne są zakładki **Ćwiczenia** (`/cwiczenia`) i **Moje pl
 
 Lokalna TimescaleDB przechowuje wyniki i pomiary w prawdziwych hypertabelach. Supabase PostgreSQL 17 używa zgodnych zwykłych tabel z indeksami; API działa tak samo. Migracje V5–V7 wykonuje automatycznie Flyway. Instrukcja i kontrakty nowych modułów: [SPRINT3.md](docs/SPRINT3.md).
 
+**Moduły dodatkowe (S4):** po zalogowaniu strona główna pokazuje treningi zaplanowane na dziś, zaległe i najbliższe oraz podsumowanie tygodnia. Kalendarz (`/kalendarz`), statystyki (`/statystyki`), kalkulatory 1RM i kalorii (`/kalkulatory`) oraz udostępnianie planów linkiem opisuje [SPRINT4.md](docs/SPRINT4.md). Migracja V9 wykonuje się automatycznie.
+
 **Panel administratora** (`/admin`) pozwala przeglądać i wyszukiwać konta, nadawać role oraz blokować i odblokowywać dostęp bez usuwania danych. Pokazuje także zbiorcze liczby kont, planów, zapisanych serii i grup. Pierwsze aktywne konto `ADMIN` inicjalizuje się jednorazowo zmienną backendu `APP_BOOTSTRAP_ADMIN_EMAIL`; kolejne role nadaje się w panelu. Migracja V8 zachowuje istniejące konta i dodaje osobną blokadę administracyjną. Instrukcja: [ADMIN.md](docs/ADMIN.md).
 
 ## Uruchomienie lokalne (dev)
@@ -118,4 +120,5 @@ Konfiguracja i [checklista wdrożenia](docs/DEPLOYMENT.md#5-sprawdź-wdrożenie)
 - [WORKOUT_PLANS_API.md](docs/WORKOUT_PLANS_API.md) — CRUD własnych planów, dni i ćwiczeń, walidacja i testy uprawnień
 - [WORKOUT_FRONTEND.md](docs/WORKOUT_FRONTEND.md) — listy, kreator, edycja i usuwanie planów, walidacja i pełny test przeglądarkowy
 - [SPRINT3.md](docs/SPRINT3.md) — wyniki, pomiary, wykresy, grupy, zaproszenia i przypisywanie planów; API i testy
+- [SPRINT4.md](docs/SPRINT4.md) — kalkulatory, kalendarz z przypomnieniami, statystyki, udostępnianie planów i dashboard; API i testy
 - [DEPLOYMENT.md](docs/DEPLOYMENT.md) — Vercel, Supabase, SMTP, zmienne środowiskowe i sprawdzenie wdrożenia

@@ -32,6 +32,9 @@ Katalog `backend/src/main/java/com/studia/aplikacja_trenerska/`:
 ├── progress/              # controller, service, dto, entity, repository: serie i pomiary
 ├── trainer/               # controller, service, dto, entity, repository: grupy i zgoda
 ├── admin/                 # controller, service, dto, repository: konta, role, blokady, liczniki
+├── calc/                  # controller, service, dto: kalkulatory 1RM oraz kalorii i makro (bez bazy)
+├── calendar/              # controller, service, dto, entity, repository: kalendarz i agenda
+├── stats/                 # controller, service, dto, repository: objętość tygodniowa, rekordy, sesje
 └── …
 ```
 
@@ -75,3 +78,9 @@ V5 dodaje wyniki i pomiary, V6 grupy/członkostwa/przypisania, a V7 konwertuje p
 `config/AdminBootstrapInitializer` jest uruchamiany przy starcie po migracjach. Opcjonalne `APP_BOOTSTRAP_ADMIN_EMAIL` może jednokrotnie podnieść istniejące, potwierdzone i niezablokowane konto do `ADMIN`; nie tworzy kont ani haseł. Stan wykonania jest zapisany w bazie, a kolejne starty i zmiany ustawienia nie nadają ról ponownie.
 
 V8 dodaje `users.blocked`, indeksy listy administracyjnej i singleton `admin_control`, zachowując dotychczasowe dane. `AdminMigrationIntegrationTests` sprawdza aktualizację V7 → V8, `AdminApiIntegrationTests` API i uprawnienia, a `AdminLifecycleIntegrationTests` przepływy kont, blokady, inicjalizację i ochronę ostatniego administratora. Opis panelu, konfiguracji i wyników testów: [ADMIN.md](ADMIN.md).
+
+## Moduły dodatkowe — Sprint 4
+
+`calc/CalculatorService` liczy 1RM (Epley, Brzycki, Lombardi) i zapotrzebowanie kaloryczne (Mifflin-St Jeor) bez dostępu do bazy; walidację zakresów zgłasza jako `400`. `calendar/ScheduleService` zapisuje wpisy kalendarza z blokadą wiersza użytkownika, sprawdza własność planu i przynależność dnia, a w odpowiedzi dopasowuje dzień po pozycji, bo edycja planu zastępuje rekordy dni. `stats/StatsService` korzysta z osobnego repozytorium agregatów JPQL na `ExerciseResult` (grupowanie po czasie zapisu = sesja) i przypisuje sesje do tygodni w strefie czasowej użytkownika. `workout/service/PlanSharingService` tworzy losowy token linku, udostępnia podgląd bez identyfikatorów i głęboko kopiuje plan do konta odbiorcy.
+
+V9 dodaje `workout_plans.share_token` i tabelę `scheduled_workouts` (kaskada z kontem, `SET NULL` z planem). Szczegóły API i testów: [SPRINT4.md](SPRINT4.md).
